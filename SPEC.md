@@ -31,13 +31,11 @@ Member names are taken from the central directory. Where a member's local file h
 
 Names are decoded before they are compared: as UTF-8 where general purpose bit 11 is set, and as CP437 otherwise. Comparison is then exact over the decoded sequence of code points. It is case-sensitive, and no Unicode normalization is applied to either side. An implementation MUST apply the same decoding and the same comparison when matching `payload.file` against member names.
 
-*Non-normative:* a writer taking a payload name from a filesystem should know that macOS returns names in NFD where most other sources produce NFC. The two are different sequences and will not match.
-
 ### 2.2 The metadata member
 
 The metadata member MUST be a valid [TOML 1.1.0](https://toml.io/en/v1.1.0) document, encoded as UTF-8. Where the member is encrypted, this applies to its decrypted content.
 
-The document MAY begin with a byte order mark (U+FEFF). TOML does not address one and editors on some platforms emit it by default. An implementation MUST skip a leading byte order mark before parsing and MUST NOT treat its presence as an error.
+The document MAY begin with a byte order mark (U+FEFF). An implementation MUST skip a leading byte order mark before parsing and MUST NOT treat its presence as an error.
 
 A container whose metadata member cannot be read at all — because it is encrypted and the key is not held, or for any other reason — is **undetermined**: its conformance cannot be established from the file. This is not the same as non-conformance, and §2.5 continues to forbid rejecting a container on the grounds that a member is encrypted.
 
@@ -70,13 +68,11 @@ A container has exactly one payload. It MAY be of any type and any length, inclu
 - not contain any character in the range U+0000 to U+001F, or U+007F;
 - not equal `slipcase.metadata.toml`.
 
-In short, `payload.file` is a plain filename and never a path. A payload is one file, not a location in a tree, and a name that cannot express a path cannot express a traversal. The colon is excluded because on some platforms a name containing one is treated as rooted, and joining it to a destination directory discards the destination.
+In short, `payload.file` is a plain filename and never a path.
 
 Only the names `.` and `..` are excluded, not the sequence `..` wherever it occurs. `a..b` is a permitted name.
 
 The payload member MUST be a regular file entry. Directory entries, symbolic links, and every other entry type a ZIP implementation can record are excluded.
-
-*Non-normative:* a permitted name is not always a writable one. `CON`, `NUL`, `COM1`, and names ending in a space or a dot are legal here and cannot be created on Windows. These rules govern what a container may say, not what a filesystem will accept.
 
 A payload MAY itself be a container. This requires no special handling and has no defined meaning.
 
@@ -109,7 +105,7 @@ An implementation:
 - MUST preserve members that it does not recognize when rewriting a container;
 - MUST write only the payload, and the metadata member if it needs it, when extracting — other members MUST NOT be written to disk;
 - MUST reject a container whose `payload.file` violates §2.3, rather than sanitizing it;
-- MUST NOT assume it can read a container whose `slipcase_version` it does not recognize;
+- MUST NOT report a container whose `slipcase_version` it does not recognize as conformant to a version it does recognize;
 - MUST NOT report a container as conformant, or as non-conformant, when it cannot read the metadata member (§2.2).
 
 Nothing else here is a security requirement. Resource limits when parsing ZIP or TOML are the concern of whatever libraries an implementation uses, and apply equally to every consumer of those formats.

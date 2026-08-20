@@ -1,32 +1,14 @@
 # slipcase conformance corpus — manifest
 #
-# Drafted against SPEC.md version 1.0 (draft), from the specification text alone.
+# Test containers for slipcase 1.0. See README.md in this directory for what the
+# corpus is for, the verdict vocabulary, and what it cannot test.
 #
 # THIS FILE IS NOT NORMATIVE. Where a case and SPEC.md disagree, the specification
-# wins and the case is a bug. The corpus exists to make two implementations agree
-# about what §2 already says, not to say anything of its own.
+# wins and the case is a bug.
 #
-# Scope: §2 only. Section 2 states properties of a container, so each case here is
-# a file plus an expected verdict. Section 3 states requirements on programs —
-# preserving unknown keys, writing only the payload on extract, refusing to
-# sanitize a bad payload.file — which no sample file can test. Those need a
-# harness that runs an implementation and inspects what it did.
-#
-# VERDICTS
-#
-#   accept        conformant; an implementation MUST NOT reject it
-#   reject        non-conformant; an implementation MUST reject it
-#   undetermined  §2.2: the metadata member cannot be read, so conformance cannot
-#                 be established from the file. An implementation MUST NOT report
-#                 the container as conformant or as non-conformant.
-#   out-of-scope  §2.4: the container declares a slipcase_version other than the
-#                 one under test, so this specification's conformance question
-#                 does not apply. Not a failure.
-#
-# There is no "undecided" verdict. The thirteen questions this manifest raised on
-# its first draft were resolved into SPEC.md rather than left open. A future case
-# that SPEC.md cannot answer is a specification bug and belongs in an issue, not
-# in a verdict column.
+# Each case carries an id, the SPEC.md section it exercises, an expected verdict
+# of accept / reject / undetermined / out-of-scope, and a note. A case may add a
+# filename key when its subject is the container's name on disk.
 
 manifest_version = "0.2"
 spec_version = "1.0"
@@ -527,7 +509,7 @@ note = "The metadata member is ZIP-encrypted and the key is not supplied. §2.5 
 id = "out-of-scope/version-2-0"
 section = "2.4"
 expect = "out-of-scope"
-note = "slipcase_version = \"2.0\" in an otherwise well-formed container. Conformance is relative to a version; this corpus tests 1.0 and says nothing about 2.0. Not a failure."
+note = "slipcase_version = \"2.0\" in an otherwise well-formed container. Conformance is relative to a version; this corpus tests 1.0 and says nothing about 2.0. Not a failure. §3 requires that an implementation not report it as conformant to a version it does recognize, which makes this case checkable rather than a proxy."
 
 [[case]]
 id = "out-of-scope/version-malformed"
