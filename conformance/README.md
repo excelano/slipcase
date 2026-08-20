@@ -42,8 +42,7 @@ says, not to say anything of its own.
 Section 2 states properties of a container, so each case is a file plus an
 expected verdict. Section 3 states requirements on programs — preserving unknown
 keys, writing only the payload on extract, refusing to sanitize a bad
-`payload.file` — and no sample file can test those. They need a harness that
-runs an implementation and inspects what it did. None exists yet.
+`payload.file` — and no sample file can test those.
 
 ## Two containers worth knowing about
 
