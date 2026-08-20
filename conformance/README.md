@@ -4,7 +4,7 @@ Test containers for slipcase 1.0, described by `manifest.toml` and built by
 `generate.py`.
 
 ```
-python3 generate.py          # writes cases/ — 76 containers
+python3 generate.py          # writes cases/ — 77 containers, then self-checks
 python3 generate.py --list   # case ids and expected verdicts
 ```
 
@@ -12,6 +12,11 @@ Requires Python 3.11 or later. Nothing else is needed: the ZIP writer is in
 `generate.py`, because the standard library cannot produce duplicate member
 names, a local file header that disagrees with the central directory, a CP437
 name with general purpose bit 11 clear, or an entry that is not a regular file.
+
+After writing, the generator holds every `accept` and `out-of-scope` case to
+§2.2 and §2.1 and fails if one does not conform. A case declared conformant that
+is not conformant is the corpus lying about the specification, which is worse
+than having no corpus.
 
 `cases/` is generated and is not committed. Every container is deterministic —
 fixed timestamps, no randomness — so regenerating an unchanged case reproduces

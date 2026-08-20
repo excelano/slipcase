@@ -175,7 +175,7 @@ note = "payload.size and payload.sha256 beside payload.file. The payload table i
 id = "accept/metadata-key-order-reversed"
 section = "2.2"
 expect = "accept"
-note = "[payload] table written before slipcase_version. TOML is order-independent."
+note = "payload.file written before slipcase_version, using dotted keys. Root keys are order-independent; a bare key after a table header is not, which is why this cannot be written with a [payload] header."
 
 [[case]]
 id = "accept/metadata-comments-and-blank-lines"
@@ -396,6 +396,12 @@ id = "reject/payload-file-not-string"
 section = "2.2"
 expect = "reject"
 note = "file = 42. §2.2 types it as a string."
+
+[[case]]
+id = "reject/version-inside-payload-table"
+section = "2.2"
+expect = "reject"
+note = "slipcase_version written after a [payload] table header, so it parses as payload.slipcase_version and the document has no root slipcase_version. A realistic mistake: appending a key to a file that ends in a table. Found by slpc-rust 0.2.0 against an earlier corpus that had this container marked accept."
 
 [[case]]
 id = "reject/payload-not-a-table"

@@ -24,6 +24,7 @@ import pathlib
 import struct
 import sys
 import tomllib
+import zipfile
 import zlib
 
 HERE = pathlib.Path(__file__).parent
@@ -467,7 +468,9 @@ def _() -> bytes:
 
 @case("accept/metadata-key-order-reversed")
 def _() -> bytes:
-    text = '[payload]\nfile = "report.pdf"\n\nslipcase_version = "1.0"\n'
+    # Dotted keys, not a table header: a bare key following [payload] would belong
+    # to that table, which is what reject/version-inside-payload-table tests.
+    text = 'payload.file = "report.pdf"\nslipcase_version = "1.0"\n'
     return container(metadata=text.encode())
 
 
@@ -623,6 +626,11 @@ case("reject/version-not-string")(
 case("reject/payload-file-not-string")(
     lambda: container(metadata=b'slipcase_version = "1.0"\n\n[payload]\nfile = 42\n')
 )
+case("reject/version-inside-payload-table")(
+    lambda: container(
+        metadata=b'[payload]\nfile = "report.pdf"\n\nslipcase_version = "1.0"\n'
+    )
+)
 case("reject/payload-not-a-table")(
     lambda: container(metadata=b'slipcase_version = "1.0"\npayload = "report.pdf"\n')
 )
@@ -699,6 +707,52 @@ def check_coverage(manifest: list[dict]) -> None:
         sys.exit("generate.py: " + "\n".join(problems))
 
 
+# Metadata using TOML 1.1.0 syntax that the standard library cannot parse, since
+# tomllib implements 1.0.0. Skipped by the self-check rather than passed silently.
+NEEDS_TOML_11 = {"accept/metadata-inline-table-multiline"}
+
+
+def check_cases(manifest: list[dict], out_dir: pathlib.Path) -> list[str]:
+    """Re-read what was written and hold it to §2.2 and §2.1.
+
+    A case declared conformant must actually be conformant. Checking only that
+    payload.file resolves is not enough: it misses a document whose
+    slipcase_version was captured by a preceding table header, which is how
+    accept/metadata-key-order-reversed shipped wrong until slpc-rust caught it.
+    """
+    problems = []
+    for entry in manifest:
+        case_id, verdict = entry["id"], entry["expect"]
+        if verdict not in ("accept", "out-of-scope") or case_id in NEEDS_TOML_11:
+            continue
+        path = out_dir / entry.get("filename", f"{case_id}.slpc")
+        try:
+            with zipfile.ZipFile(path) as archive:
+                metadata = archive.read(META_NAME)
+                members = archive.namelist()
+        except Exception as error:
+            problems.append(f"{case_id}: unreadable archive: {error}")
+            continue
+        if metadata.startswith(b"\xef\xbb\xbf"):
+            metadata = metadata[3:]
+        try:
+            document = tomllib.loads(metadata.decode("utf-8"))
+        except Exception as error:
+            problems.append(f"{case_id}: metadata does not parse: {error}")
+            continue
+        if not isinstance(document.get("slipcase_version"), str):
+            problems.append(
+                f"{case_id}: no root slipcase_version (root keys: {sorted(document)})"
+            )
+        payload = document.get("payload")
+        target = payload.get("file") if isinstance(payload, dict) else None
+        if not isinstance(target, str):
+            problems.append(f"{case_id}: payload.file is not a string")
+        elif target not in members:
+            problems.append(f"{case_id}: payload.file {target!r} names no member")
+    return problems
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=pathlib.Path, default=HERE / "cases")
@@ -725,6 +779,15 @@ def main() -> int:
     print(f"wrote {total} containers to {args.out}")
     for verdict in sorted(counts):
         print(f"  {verdict:14} {counts[verdict]}")
+
+    problems = check_cases(manifest, args.out)
+    if problems:
+        print("\nself-check failed:")
+        for problem in problems:
+            print(f"  {problem}")
+        return 1
+    skipped = len(NEEDS_TOML_11)
+    print(f"self-check passed ({skipped} skipped, needing a TOML 1.1.0 parser)")
     return 0
 
 
