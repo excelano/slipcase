@@ -1,0 +1,535 @@
+# slipcase conformance corpus — manifest
+#
+# Drafted against SPEC.md version 1.0 (draft), from the specification text alone.
+#
+# THIS FILE IS NOT NORMATIVE. Where a case and SPEC.md disagree, the specification
+# wins and the case is a bug. The corpus exists to make two implementations agree
+# about what §2 already says, not to say anything of its own.
+#
+# Scope: §2 only. Section 2 states properties of a container, so each case here is
+# a file plus an expected verdict. Section 3 states requirements on programs —
+# preserving unknown keys, writing only the payload on extract, refusing to
+# sanitize a bad payload.file — which no sample file can test. Those need a
+# harness that runs an implementation and inspects what it did.
+#
+# VERDICTS
+#
+#   accept        conformant; an implementation MUST NOT reject it
+#   reject        non-conformant; an implementation MUST reject it
+#   undetermined  §2.2: the metadata member cannot be read, so conformance cannot
+#                 be established from the file. An implementation MUST NOT report
+#                 the container as conformant or as non-conformant.
+#   out-of-scope  §2.4: the container declares a slipcase_version other than the
+#                 one under test, so this specification's conformance question
+#                 does not apply. Not a failure.
+#
+# There is no "undecided" verdict. The thirteen questions this manifest raised on
+# its first draft were resolved into SPEC.md rather than left open. A future case
+# that SPEC.md cannot answer is a specification bug and belongs in an issue, not
+# in a verdict column.
+
+manifest_version = "0.2"
+spec_version = "1.0"
+toml_version = "1.1.0"
+
+# ---------------------------------------------------------------------------
+# Accept — §2.1 structure
+# ---------------------------------------------------------------------------
+
+[[case]]
+id = "accept/minimal"
+section = "2.1"
+expect = "accept"
+note = "Metadata and payload, both stored uncompressed. The Appendix A container."
+
+[[case]]
+id = "accept/deflated"
+section = "2.5"
+expect = "accept"
+note = "Both members deflated. Compression method is unconstrained."
+
+[[case]]
+id = "accept/order-payload-first"
+section = "2.5"
+expect = "accept"
+note = "Payload precedes the metadata member. Member order is unconstrained."
+
+[[case]]
+id = "accept/extra-members-tool-artifacts"
+section = "2.5"
+expect = "accept"
+note = "Adds __MACOSX/, .DS_Store, desktop.ini. Named in §2.5 as grounds that MUST NOT cause rejection."
+
+[[case]]
+id = "accept/extra-member-arbitrary"
+section = "2.1"
+expect = "accept"
+note = "An extra member named notes.txt. Additional members have no defined meaning and any name."
+
+[[case]]
+id = "accept/extra-member-resembling-payload"
+section = "2.1"
+expect = "accept"
+note = "Extra member named report.pdf while payload.file names data.bin. Decoy for position- or convention-based lookup."
+
+[[case]]
+id = "accept/archive-comment"
+section = "2.5"
+expect = "accept"
+note = "ZIP archive comment present. Not among the constrained properties."
+
+[[case]]
+id = "accept/data-descriptors"
+section = "2.5"
+expect = "accept"
+note = "Members written with general purpose bit 3 set and sizes in trailing data descriptors."
+
+[[case]]
+id = "accept/zip64"
+section = "2.5"
+expect = "accept"
+note = "Zip64 end of central directory. Named in §2.5."
+
+[[case]]
+id = "accept/extra-fields"
+section = "2.5"
+expect = "accept"
+note = "Extended timestamp and Unix UID/GID extra fields on both members."
+
+[[case]]
+id = "accept/timestamps-epoch"
+section = "2.5"
+expect = "accept"
+note = "MS-DOS zero timestamps on every member."
+
+[[case]]
+id = "accept/encrypted-extra-member"
+section = "2.5"
+expect = "accept"
+note = "An additional member is ZIP-encrypted; metadata and payload are not."
+
+[[case]]
+id = "accept/encrypted-payload"
+section = "2.5"
+expect = "accept"
+note = "The payload member is encrypted, the metadata member is not. Conformance is establishable; only extraction needs the key. Contrast undetermined/encrypted-metadata-member."
+
+[[case]]
+id = "accept/container-filename-not-convention"
+section = "4"
+expect = "accept"
+note = "File named payload-bundle.zip. Appendix B is a convention; identification is by content."
+
+# ---------------------------------------------------------------------------
+# Accept — §2.1 member name decoding and matching
+# ---------------------------------------------------------------------------
+
+[[case]]
+id = "accept/name-utf8-bit11-set"
+section = "2.1"
+expect = "accept"
+note = "Payload named rapport-financiér.pdf, UTF-8 bytes, general purpose bit 11 set."
+
+[[case]]
+id = "accept/name-cp437-bit11-clear"
+section = "2.1"
+expect = "accept"
+note = "Payload named café.txt with é as CP437 0x82 and bit 11 clear. Decodes to the same string as payload.file."
+
+[[case]]
+id = "accept/name-cjk-utf8"
+section = "2.1"
+expect = "accept"
+note = "Payload named 報告書.pdf, bit 11 set."
+
+[[case]]
+id = "accept/local-header-name-differs"
+section = "2.1"
+expect = "accept"
+note = "Central directory names the payload report.pdf; the same entry's local file header records decoy.pdf. payload.file = report.pdf. §2.1 makes the central directory authoritative, so this matches."
+
+# ---------------------------------------------------------------------------
+# Accept — §2.2 metadata
+# ---------------------------------------------------------------------------
+
+[[case]]
+id = "accept/unknown-top-level-keys"
+section = "2.2"
+expect = "accept"
+note = "title, author, retention_class alongside the two required keys."
+
+[[case]]
+id = "accept/unknown-nested-tables"
+section = "2.2"
+expect = "accept"
+note = "[provenance.system.source] three levels deep. Additional keys are permitted at any depth."
+
+[[case]]
+id = "accept/unknown-keys-in-payload-table"
+section = "2.2"
+expect = "accept"
+note = "payload.size and payload.sha256 beside payload.file. The payload table is not closed."
+
+[[case]]
+id = "accept/metadata-key-order-reversed"
+section = "2.2"
+expect = "accept"
+note = "[payload] table written before slipcase_version. TOML is order-independent."
+
+[[case]]
+id = "accept/metadata-comments-and-blank-lines"
+section = "2.2"
+expect = "accept"
+note = "Comments, blank lines, and indentation around the required keys."
+
+[[case]]
+id = "accept/metadata-crlf"
+section = "2.2"
+expect = "accept"
+note = "CRLF line endings. Permitted by TOML 1.1.0."
+
+[[case]]
+id = "accept/metadata-inline-table"
+section = "2.2"
+expect = "accept"
+note = "payload written as an inline table on one line: payload = { file = \"report.pdf\" }."
+
+[[case]]
+id = "accept/metadata-inline-table-multiline"
+section = "2.2"
+expect = "accept"
+note = "Inline table spanning several lines with a trailing comma. Legal in TOML 1.1.0 and not in 1.0.0, so this case fails against a 1.0.0 parser and is what proves the version pin in §2.2."
+
+[[case]]
+id = "accept/metadata-dotted-key"
+section = "2.2"
+expect = "accept"
+note = "Written as payload.file = \"report.pdf\" with no table header. Same key path."
+
+[[case]]
+id = "accept/metadata-bom"
+section = "2.2"
+expect = "accept"
+note = "Metadata member begins with U+FEFF. §2.2 permits it and requires readers to skip it before parsing."
+
+# ---------------------------------------------------------------------------
+# Accept — §2.3 payload
+# ---------------------------------------------------------------------------
+
+[[case]]
+id = "accept/payload-zero-bytes"
+section = "2.3"
+expect = "accept"
+note = "Zero-length payload. Any length, including zero."
+
+[[case]]
+id = "accept/payload-name-spaces"
+section = "2.3"
+expect = "accept"
+note = "Q3 report final.pdf. Spaces are not among the excluded characters."
+
+[[case]]
+id = "accept/payload-name-double-extension"
+section = "2.3"
+expect = "accept"
+note = "archive.tar.gz."
+
+[[case]]
+id = "accept/payload-name-no-extension"
+section = "2.3"
+expect = "accept"
+note = "README."
+
+[[case]]
+id = "accept/payload-name-leading-dot"
+section = "2.3"
+expect = "accept"
+note = ".hidden. A dotfile is not `.` and not `..`."
+
+[[case]]
+id = "accept/payload-name-dotdot-substring"
+section = "2.3"
+expect = "accept"
+note = "a..b. §2.3 excludes the names `.` and `..`, not the sequence wherever it occurs, and now says so explicitly."
+
+[[case]]
+id = "accept/payload-name-windows-reserved"
+section = "2.3"
+expect = "accept"
+note = "file = CON. Legal under §2.3 and unwritable on Windows. The non-normative note in §2.3 covers the difference."
+
+[[case]]
+id = "accept/payload-name-trailing-dot"
+section = "2.3"
+expect = "accept"
+note = "file = report. — a trailing dot. Legal here, silently stripped by Windows."
+
+[[case]]
+id = "accept/payload-nested-container"
+section = "2.3"
+expect = "accept"
+note = "Payload is itself a conformant container. Requires no special handling."
+
+# ---------------------------------------------------------------------------
+# Reject — §2.1 structure
+# ---------------------------------------------------------------------------
+
+[[case]]
+id = "reject/not-a-zip"
+section = "2.1"
+expect = "reject"
+note = "Arbitrary bytes with a .slpc extension."
+
+[[case]]
+id = "reject/no-metadata-member"
+section = "2.1"
+expect = "reject"
+note = "A ZIP holding only report.pdf."
+
+[[case]]
+id = "reject/no-payload-member"
+section = "2.1"
+expect = "reject"
+note = "payload.file names report.pdf; no such member exists."
+
+[[case]]
+id = "reject/metadata-in-subdirectory"
+section = "2.1"
+expect = "reject"
+note = "Only sub/slipcase.metadata.toml is present. The member name must equal slipcase.metadata.toml."
+
+[[case]]
+id = "reject/empty-archive"
+section = "2.1"
+expect = "reject"
+note = "A valid ZIP with no members."
+
+[[case]]
+id = "reject/duplicate-metadata-members"
+section = "2.1"
+expect = "reject"
+note = "Two members named slipcase.metadata.toml with different content. §2.1 requires exactly one."
+
+[[case]]
+id = "reject/duplicate-payload-members"
+section = "2.1"
+expect = "reject"
+note = "Two members whose names both equal payload.file. §2.1 requires exactly one."
+
+# ---------------------------------------------------------------------------
+# Reject — §2.1 name matching
+# ---------------------------------------------------------------------------
+
+[[case]]
+id = "reject/metadata-name-case-mismatch"
+section = "2.1"
+expect = "reject"
+note = "Member named SLIPCASE.METADATA.TOML. Comparison is case-sensitive, so there is no metadata member."
+
+[[case]]
+id = "reject/payload-name-case-mismatch"
+section = "2.1"
+expect = "reject"
+note = "payload.file = Report.pdf against a member named report.pdf. Case-sensitive comparison, so nothing matches."
+
+[[case]]
+id = "reject/payload-name-nfd-vs-nfc"
+section = "2.1"
+expect = "reject"
+note = "Member named café.txt in NFD (e + U+0301) against payload.file in NFC (U+00E9). No normalization is applied, so the two do not match. The case macOS produces."
+
+[[case]]
+id = "reject/local-header-name-only-match"
+section = "2.1"
+expect = "reject"
+note = "Central directory names the entry decoy.pdf; its local file header records report.pdf, which is what payload.file names. The central directory is authoritative, so no member matches."
+
+# ---------------------------------------------------------------------------
+# Reject — §2.2 metadata
+# ---------------------------------------------------------------------------
+
+[[case]]
+id = "reject/metadata-invalid-toml"
+section = "2.2"
+expect = "reject"
+note = "Unterminated string. Not a valid TOML 1.1.0 document."
+
+[[case]]
+id = "reject/metadata-not-utf8"
+section = "2.2"
+expect = "reject"
+note = "Latin-1 bytes in a value. TOML 1.1.0 requires UTF-8."
+
+[[case]]
+id = "reject/metadata-empty"
+section = "2.2"
+expect = "reject"
+note = "Zero-length metadata member. Valid TOML, but neither required key is present."
+
+[[case]]
+id = "reject/missing-slipcase-version"
+section = "2.2"
+expect = "reject"
+note = "payload.file present, slipcase_version absent."
+
+[[case]]
+id = "reject/missing-payload-file"
+section = "2.2"
+expect = "reject"
+note = "[payload] table present but empty."
+
+[[case]]
+id = "reject/missing-payload-table"
+section = "2.2"
+expect = "reject"
+note = "No payload table at all."
+
+[[case]]
+id = "reject/version-not-string"
+section = "2.2"
+expect = "reject"
+note = "slipcase_version = 1.0 as a TOML float. §2.2 types it as a string."
+
+[[case]]
+id = "reject/payload-file-not-string"
+section = "2.2"
+expect = "reject"
+note = "file = 42. §2.2 types it as a string."
+
+[[case]]
+id = "reject/payload-not-a-table"
+section = "2.2"
+expect = "reject"
+note = "payload = \"report.pdf\" as a string, so the key path payload.file does not resolve."
+
+# ---------------------------------------------------------------------------
+# Reject — §2.3 payload.file
+# ---------------------------------------------------------------------------
+# Each carries a member actually matching the stated name where ZIP allows it,
+# so the only violation is §2.3 itself.
+
+[[case]]
+id = "reject/payload-file-empty"
+section = "2.3"
+expect = "reject"
+note = "file = \"\"."
+
+[[case]]
+id = "reject/payload-file-dot"
+section = "2.3"
+expect = "reject"
+note = "file = \".\"."
+
+[[case]]
+id = "reject/payload-file-dotdot"
+section = "2.3"
+expect = "reject"
+note = "file = \"..\"."
+
+[[case]]
+id = "reject/payload-file-forward-slash"
+section = "2.3"
+expect = "reject"
+note = "file = \"sub/report.pdf\", with a member of that name present."
+
+[[case]]
+id = "reject/payload-file-backslash"
+section = "2.3"
+expect = "reject"
+note = "file = \"sub\\\\report.pdf\", with a member of that name present."
+
+[[case]]
+id = "reject/payload-file-traversal"
+section = "2.3"
+expect = "reject"
+note = "file = \"../../etc/passwd\". Violates both the slash and the dotdot rules."
+
+[[case]]
+id = "reject/payload-file-colon-drive"
+section = "2.3"
+expect = "reject"
+note = "file = \"C:report.pdf\"."
+
+[[case]]
+id = "reject/payload-file-colon-plain"
+section = "2.3"
+expect = "reject"
+note = "file = \"notes:draft.txt\". The colon rule is unconditional, not limited to drive letters."
+
+[[case]]
+id = "reject/payload-file-nul"
+section = "2.3"
+expect = "reject"
+note = "file = \"rep\\u0000ort.pdf\". U+0000 is in the excluded control range."
+
+[[case]]
+id = "reject/payload-file-newline"
+section = "2.3"
+expect = "reject"
+note = "file = \"report\\npdf\". U+000A is in the excluded control range."
+
+[[case]]
+id = "reject/payload-file-del"
+section = "2.3"
+expect = "reject"
+note = "file = \"report\\u007Fpdf\". U+007F is excluded by name."
+
+[[case]]
+id = "reject/payload-file-equals-metadata"
+section = "2.3"
+expect = "reject"
+note = "file = \"slipcase.metadata.toml\"."
+
+# ---------------------------------------------------------------------------
+# Reject — §2.3 payload entry type
+# ---------------------------------------------------------------------------
+
+[[case]]
+id = "reject/payload-symlink"
+section = "2.3"
+expect = "reject"
+note = "Payload member carries Unix symlink external attributes; its content is a target path. Not a regular file entry."
+
+[[case]]
+id = "reject/payload-directory-entry"
+section = "2.3"
+expect = "reject"
+note = "Member matching payload.file carries directory external attributes and zero length. Not a regular file entry. Named without a trailing slash, since a name containing / is excluded by §2.3 anyway."
+
+[[case]]
+id = "reject/payload-fifo-entry"
+section = "2.3"
+expect = "reject"
+note = "Payload member carries Unix FIFO mode bits in its external attributes. Not a regular file entry."
+
+# ---------------------------------------------------------------------------
+# Undetermined — §2.2
+# ---------------------------------------------------------------------------
+
+[[case]]
+id = "undetermined/encrypted-metadata-member"
+section = "2.2"
+expect = "undetermined"
+note = "The metadata member is ZIP-encrypted and the key is not supplied. §2.5 forbids rejecting on the grounds of encryption; §2.2 requires the member to parse as TOML once decrypted. Conformance cannot be established, so an implementation must report neither verdict. Contrast accept/encrypted-payload."
+
+# ---------------------------------------------------------------------------
+# Out of scope — §2.4
+# ---------------------------------------------------------------------------
+
+[[case]]
+id = "out-of-scope/version-2-0"
+section = "2.4"
+expect = "out-of-scope"
+note = "slipcase_version = \"2.0\" in an otherwise well-formed container. Conformance is relative to a version; this corpus tests 1.0 and says nothing about 2.0. Not a failure."
+
+[[case]]
+id = "out-of-scope/version-malformed"
+section = "2.4"
+expect = "out-of-scope"
+note = "slipcase_version = \"banana\". §2.2 constrains the value's type and not its shape, so this is outside the question in the same way as 2.0."
+
+[[case]]
+id = "out-of-scope/version-empty-string"
+section = "2.4"
+expect = "out-of-scope"
+note = "slipcase_version = \"\". A string, so §2.2 is satisfied; not \"1.0\", so §2.4 puts it outside the question."
