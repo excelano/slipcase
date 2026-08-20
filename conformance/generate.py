@@ -718,7 +718,8 @@ def check_cases(manifest: list[dict], out_dir: pathlib.Path) -> list[str]:
     A case declared conformant must actually be conformant. Checking only that
     payload.file resolves is not enough: it misses a document whose
     slipcase_version was captured by a preceding table header, which is how
-    accept/metadata-key-order-reversed shipped wrong until slpc-rust caught it.
+    accept/metadata-key-order-reversed shipped wrong: the half that was checked
+    was fine.
     """
     problems = []
     for entry in manifest:

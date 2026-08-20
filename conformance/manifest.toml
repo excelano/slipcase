@@ -383,7 +383,7 @@ note = "file = 42. §2.2 types it as a string."
 id = "reject/version-inside-payload-table"
 section = "2.2"
 expect = "reject"
-note = "slipcase_version written after a [payload] table header, so it parses as payload.slipcase_version and the document has no root slipcase_version. A realistic mistake: appending a key to a file that ends in a table. Found by slpc-rust 0.2.0 against an earlier corpus that had this container marked accept."
+note = "slipcase_version written after a [payload] table header, so it parses as payload.slipcase_version and the document has no root slipcase_version. A realistic mistake: appending a key to a file that ends in a table. An earlier revision of this corpus had the same container marked accept."
 
 [[case]]
 id = "reject/payload-not-a-table"
