@@ -118,6 +118,7 @@ note = "The payload member is encrypted, the metadata member is not. Conformance
 id = "accept/container-filename-not-convention"
 section = "4"
 expect = "accept"
+filename = "accept/payload-bundle.zip"
 note = "File named payload-bundle.zip. Appendix B is a convention; identification is by content."
 
 # ---------------------------------------------------------------------------
