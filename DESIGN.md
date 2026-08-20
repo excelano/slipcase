@@ -78,7 +78,7 @@ The extension is `.slpc`. The media type is `application/x.slipcase+zip`, provis
 
 Mandatory. There is no such thing as a slipcase container without metadata. Its name is fixed, which is what makes the payload discoverable, since the payload's own name is not.
 
-The member MUST be valid **TOML 1.0** and MUST be UTF-8 encoded, as TOML 1.0 requires. Pinning the TOML version matters because an implementer otherwise does not know which grammar to write against; it is unrelated to `slipcase_version` below.
+The member MUST be valid **TOML 1.1.0** and MUST be UTF-8 encoded, as TOML 1.1.0 requires. Pinning the TOML version matters because an implementer otherwise does not know which grammar to write against; it is unrelated to `slipcase_version` below.
 
 Two keys are required. No key is forbidden:
 

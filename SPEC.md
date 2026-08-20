@@ -31,7 +31,7 @@ Member names are compared as decoded from the ZIP archive: as UTF-8 where genera
 
 ### 2.2 The metadata member
 
-The metadata member MUST be a valid [TOML 1.0](https://toml.io/en/v1.0.0) document, encoded as UTF-8.
+The metadata member MUST be a valid [TOML 1.1.0](https://toml.io/en/v1.1.0) document, encoded as UTF-8.
 
 It MUST contain the following two keys, and MAY contain any others:
 
