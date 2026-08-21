@@ -74,9 +74,8 @@ characters are excluded because no filesystem accepts them, and a NUL is a
 familiar way to make a name end early in one component of a system and not in
 another.
 
-The exclusion names two filenames rather than banning the sequence `..` wherever
-it appears, because `a..b` is a name and not a traversal. Chasing the sequence
-would need exceptions, and the rule would stop being one rule.
+Banning the sequence `..` wherever it appears would need exceptions — `a..b` is
+a name and not a traversal — and the rule would stop being one rule.
 
 Windows device names — `CON`, `NUL`, `COM1`, and names ending in a space or a dot
 — stay legal. They are unwritable on one platform and ordinary on every other, and
@@ -93,6 +92,17 @@ kind that is permitted is shorter and closes the rest.
 encoding. A reader and a writer that decode differently will disagree about
 whether `payload.file` matches any member, and the payload becomes unfindable in
 the containers whose names are not ASCII.
+
+**A rule for names flagged UTF-8 that are not UTF-8 was considered and rejected.**
+ZIP lets a writer set general purpose bit 11 over arbitrary bytes and validates
+nothing, and decoders diverge on invalid input: Go's `archive/zip` keeps the
+raw bytes, Rust's `zip` substitutes U+FFFD, Python's `zipfile` refuses to open
+the archive. A rule would have reached none of them — Go complies without
+knowing it exists, Python cannot comply at all, and a Rust implementer either
+has read the crate's source and already found the problem or has not and would
+not apply the rule. The file it guards against needs a `payload.file` carrying
+U+FFFD, which only arises when something upstream already decoded a filename
+lossily.
 
 **Why the central directory decides.** A member's name is recorded in both its
 local file header and the central directory, and nothing requires the two to
@@ -151,12 +161,10 @@ metadata cannot be read is undetermined rather than non-conformant. A reader
 without the key knows it cannot answer the question, and that is different from
 knowing the answer is no.
 
-**On the version.** It names the specification version, not the payload's version.
-Editorial revisions do not move it: fixing a typo, clarifying a paragraph, or
-adding an example leaves the number alone, because none of those changes what a
-conformant container is. Only a change to that moves it. The number is a string,
-and dotted; the minor component tells a reader how large a revision was, where
-`1.1` is a small change and `2.0` is a rework.
+**On the version.** The line is drawn at what counts as a conformant container
+rather than at any edit to this document, so the number moves only when
+something about containers does. Fixing a typo cannot invalidate a container
+written yesterday.
 
 **Why conformance is relative to a version.** This specification can say whether a
 container declaring `1.0` conforms to it. It cannot say anything about one
@@ -169,8 +177,7 @@ make every future container retroactively broken by every reader written today.
 revision is one an older implementation may be unable to absorb, whether it
 relaxes a rule, tightens one, or adds a required key. The one category that would
 be safe — new optional keys and members — needs no version change at all, since
-SPEC §3 already requires unknown ones to be preserved. So the minor component
-carries magnitude, never a promise.
+SPEC §3 already requires unknown ones to be preserved.
 
 **Why any additional key is permitted, permanently.** This is the format's whole
 forward-compatibility story and must never be revised. A container that carries
@@ -199,17 +206,16 @@ problem with a vocabulary fix, and it is not the container's to solve.
 
 ### 3.3 Nesting — SPEC §2.3
 
-A payload may itself be a container. Nesting requires no special handling, since a
-`.slpc` inside a `.slpc` is just a payload. The format neither prohibits nesting
-nor defines a use for it.
+Defining a meaning for nesting would mean defining aggregation, which §5
+rejects. Prohibiting it would be a rule with nothing behind it, since a
+container inside a container is a payload like any other.
 
 ### 3.4 The naming convention — SPEC Appendix B
 
-Naming a container for its payload with `.slpc` appended is the same pattern as
-`.gz`, `.zst`, and `.gpg`. It keeps the payload's own extension visible, so what is
-inside can be guessed without opening the container, and it survives the awkward
-cases: `archive.tar.gz.slpc`, `notes.toml.slpc`, a payload with no extension at
-all.
+The pattern is `.gz`, `.zst`, and `.gpg`: a suffix appended to a name that keeps
+its own. It was adopted rather than invented, so the awkward cases were already
+solved — `archive.tar.gz.slpc`, `notes.toml.slpc`, a payload with no extension
+at all.
 
 It stays a convention rather than a rule because enforcing it would buy nothing.
 `payload.file` is the only authority on what the payload is called, and a reader
