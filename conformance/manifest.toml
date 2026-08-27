@@ -336,6 +336,12 @@ expect = "reject"
 note = "The record's comment length runs past the end of the file. A reader taking the last signature it finds accepts it; one checking the length keeps looking and finds an earlier record with a different central directory. §2.1 requires the offsets to be taken from the start of the file, and a record that does not end the file is not the one that describes it."
 
 [[case]]
+id = "reject/eocd-split-across-disks"
+section = "2.1"
+expect = "reject"
+note = "The end of central directory record says this is disk 1 of a split archive. §2.1 requires both disk numbers to be zero: nothing produces a multi-disk container, no reader here could read one, and which part of it a reader has in front of it decides which members it sees."
+
+[[case]]
 id = "reject/zip64-gate-mismatch"
 section = "2.1"
 expect = "reject"

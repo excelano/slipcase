@@ -4,7 +4,7 @@ Test containers for slipcase 1.0, described by `manifest.toml` and built by
 `generate.py`.
 
 ```
-python3 generate.py          # writes cases/ — 83 containers, then self-checks
+python3 generate.py          # writes cases/ — 87 containers, then self-checks
 python3 generate.py --list   # case ids and expected verdicts
 ```
 

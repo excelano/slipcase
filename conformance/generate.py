@@ -656,15 +656,67 @@ def _() -> bytes:
 
 @case("reject/eocd-not-at-end-of-file")
 def _() -> bytes:
-    """The record's comment length runs past the end of the file.
+    """Two end of central directory records, the last one overrunning the file.
 
-    A reader that takes the last signature it finds accepts this; one that
-    checks the length and keeps looking finds an earlier record and a different
-    central directory. Two readers, two payloads, and the file decides nothing.
+    The file carries its directory twice. The first record is well formed and
+    names all three members, the duplicate included. The second is appended
+    after it, names only the first two, and declares a comment that runs past
+    the end of the file.
+
+    A reader that takes the last signature it finds believes the second record,
+    sees two members and no duplicate, and says conformant. A reader that checks
+    the declared length before believing it rejects that record, falls back to
+    the first, and finds three. Two readers, two answers, one file.
+
+    Written this way after the first attempt did not discriminate: a single
+    record with an overrunning comment is refused by the ZIP layer on its own,
+    so the corpus agreed with itself whether or not a reader checked anything.
+    Measured 2026-08-27.
+    """
+    full = _duplicate_payload_zip()
+    at = full.rfind(b"PK\x05\x06")
+    cd_start = struct.unpack_from("<I", full, at + 16)[0]
+
+    # The first two central headers, verbatim. Their recorded local-header
+    # offsets are already absolute and stay correct wherever this copy sits.
+    walk, kept = cd_start, []
+    for _ in range(2):
+        nlen, elen, clen = struct.unpack_from("<HHH", full, walk + 28)
+        size = 46 + nlen + elen + clen
+        kept.append(bytes(full[walk : walk + size]))
+        walk += size
+    short = b"".join(kept)
+
+    out = bytearray(full)
+    short_at = len(out)
+    out += short
+    out += struct.pack(
+        "<IHHHHIIH",
+        SIG_EOCD,
+        0,
+        0,
+        2,              # two entries: the duplicate is not in this copy
+        2,
+        len(short),
+        short_at,
+        0xFFFF,         # a comment that is not there
+    )
+    return bytes(out)
+
+
+@case("reject/eocd-split-across-disks")
+def _() -> bytes:
+    """The record says the archive is split across disks.
+
+    SPEC 2.1 requires both disk numbers to be zero. Nothing produces a
+    multi-disk container and no reader here could read one, so the choice is
+    between saying so and reading whichever part happens to be in front of you.
+    The three other fields §2.1 pins got cases when the rule was written; this
+    one did not, which is why it is here.
     """
     data = _duplicate_payload_zip()
     at = data.rfind(b"PK\x05\x06")
-    struct.pack_into("<H", data, at + 20, 0xFFFF)
+    struct.pack_into("<H", data, at + 4, 1)
     return bytes(data)
 
 
