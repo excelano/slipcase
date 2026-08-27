@@ -110,6 +110,28 @@ agree. Without naming one authoritative, two conforming readers can be walked in
 finding different payloads in the same file. Info-ZIP already resolves it this
 way, reporting the disagreement and continuing with the central directory name.
 
+**Why the recorded offsets are taken from the start of the file.** A ZIP's end of
+central directory record says where the central directory begins, and that number
+is an offset from the start of the archive rather than from the start of the file.
+Where something has been put in front of the archive — a self-extracting stub,
+usually — the two differ, and mainstream implementations recover by measuring the
+discrepancy and adding it to every offset they read. Info-ZIP does this, Python's
+`zipfile` does this, and so does the Rust `zip` crate.
+
+Declining to do it costs interoperability and buys what allowing no duplicate
+bought: a file with one reading. Adjusting offsets makes a file holding two
+archives readable as either, depending on where a reader starts, and it lets one file be a
+container and an executable at once, each reader finding the thing it came for.
+That is content-type confusion, and it is the attack a format invites when its whole
+purpose is to hand a payload to whatever the operating system has registered for
+it. Duplicate names were refused rather than resolved because which one wins has
+no good answer. Which archive wins has no better one.
+
+The cost is real. A container carrying a stub
+is not a container, and a tool that appends bytes to files breaks every container
+it touches. Neither is a thing this format asks for: a container is a file with an
+extension of its own, not a document smuggled inside another.
+
 **Why comparison is exact.** Case-sensitive and without normalization, because
 both alternatives are worse: case folding depends on locale, and normalizing means
 a payload can be found under a name it does not carry. The cost falls on writers
@@ -250,6 +272,56 @@ a zip tool for that.
 **Rejecting rather than sanitizing.** Sanitizing a bad `payload.file` produces a
 file at a path that no longer matches it, which breaks the format's own lookup.
 
+**Uniqueness by enumeration.** SPEC §2.1 says there is one member of each name and
+a validator can check it against a file. What makes it a requirement on programs
+too is that almost every ZIP library hides the failure: they key their own
+directory by name, so two members arrive as one and counting them returns one.
+Python's `zipfile` hands back the last, Java's `ZipFile.getEntry` hands back the
+last, and a Rust implementation building a map gets whatever its map does. Left
+unstated, several implementations can report one container conformant while
+disagreeing about which bytes are its metadata, which is the shape of Android's
+Master Key bug. Unlike most of this section it can be put to a container, and the
+corpus does: `reject/duplicate-metadata-members-agreeing` holds two byte-identical
+metadata members, so nothing downstream of the duplicate can fail and a reader
+that never counted them accepts it.
+
+**Not overwriting.** SPEC §2.3 guards the boundary of a destination directory: a
+name that cannot express a path cannot leave the directory it is joined to. It
+says nothing about what is already inside that directory, and it never could —
+`.bashrc`, `authorized_keys` and `config` are plain filenames and conformant ones.
+A tool extracting into the working directory, which is the natural default for a
+tool given one argument, is the exposed case. The rule is on the write rather than
+on the name, because the name is not the problem: somebody extracting a payload
+called `config` into a directory that has one has a decision to make, and an
+implementation's job is to ask rather than to guess. It has to be the creation
+that refuses rather than a test before it, or two processes pass the test
+together.
+
+**Permission bits.** SPEC §2.5 leaves external attributes unconstrained and forbids
+rejecting a container over them, and this section already limits the payload to a
+regular file entry. Nothing said what mode the extracted file should carry, and
+the idiomatic extraction loop in more than one language restores the recorded one.
+A container conformant in every respect could therefore put a setuid, setgid or
+world-writable file on disk. Forbidding the restore rather than constraining what
+may be recorded keeps §2.5 as it was: a container may record anything, and no
+reader acts on it.
+
+**Escaping a name rather than applying it.** SPEC §2.3 excludes the C0 controls and
+U+007F because no filesystem accepts them. The Unicode bidirectional formatting
+characters are not in that position at all: they are legal on every filesystem, a
+writer may hold a file that genuinely has one in its name, and adding them to
+§2.3 would turn a rule about paths into a table of special cases — which is what
+the same section declines to do with Windows device names. So it is a display
+problem, and it is written as one.
+
+Isolating was the alternative, and it was rejected. Wrapping the
+displayed name in U+2066 and U+2069 confines the reordering to one field, and a
+name that reads as `report.pdf` inside its own field is still a name that reads as
+`report.pdf`; the field exists to tell somebody what they are about to open. An
+override with no terminator runs to the end of the paragraph rather than the end
+of the string, so an implementation relying on containment has to emit the
+terminator itself and cannot trust the name to carry one.
+
 **The version rule.** This was once phrased as a prohibition on assuming a
 container could be read. That constrained what a program believes rather than what
 it does, and §5 gives the test it failed: a rule nothing can check is an opinion,
@@ -260,10 +332,15 @@ written against `1.0` does not have. Naming a reportable outcome instead gives t
 rule the shape of the undetermined rule beside it, and gives a corpus something to
 check. What it gives up is the part that was never enforceable.
 
-Nothing else in SPEC §3 is a security requirement. Decompression bombs, resource
-limits, and the rest are concerns for whatever zip parser an implementation uses,
-not for this format — they apply equally to every zip consumer, and a rule here
-would be unverifiable in both directions.
+This section once ended by saying that nothing else in SPEC §3 was a security
+requirement, and that decompression bombs and resource limits belonged to whatever
+ZIP parser an implementation used, since they applied equally to every ZIP
+consumer. Four of the rules above are now security requirements. The
+resource-limit claim was wrong in its premise rather than in its conclusion: a ZIP
+consumer chooses what to inflate and a reader of this format does not, because
+inflating the metadata member is how it finds out whether it is holding a
+container. SPEC §6 takes that up, and §6 below says why it is a rule rather than a
+library's business.
 
 ---
 
@@ -309,3 +386,42 @@ stored-uncompressed rule, a no-extra-fields rule, and a two-step invocation for
 anyone building a container by hand. Identification by opening the archive is
 sufficient for the format's own purposes, and the simplicity is worth more than
 the magic rule.
+
+---
+
+## 6. Why security considerations are a section — SPEC §6
+
+**Why a bound is a rule and not a library's business.** The claim this replaces
+held that resource limits belong to whatever library does the parsing, and apply
+equally to everyone using that format. True of the payload, which nobody inflates
+until somebody asks for it. Not true of the metadata member: identifying a
+container *is* inflating and parsing that member, so a reader spends the memory
+before it knows whether the file was a container, and a reader invoked by a file
+manager spends it without anybody having asked for anything. Deflate returns a
+little over a thousand bytes for each one it is given, so the file that does this
+is small enough to mail.
+
+**Why no number is given.** Every candidate was wrong somewhere. A megabyte is
+generous for the two keys this format defines and mean for anybody using the
+metadata for what SPEC §2.2 permits, which is anything they like. A gigabyte is no
+bound at all on a phone. The limit has to come from the reader's own situation,
+and requiring one without naming it is the most a format can honestly do.
+
+**Why undetermined and not non-conformant.** The bound belongs to the reader, so
+exceeding it is a fact about the reader and not about the container. A reader
+answering non-conformant would be publishing its own configuration as a property
+of somebody else's file, and two readers with different bounds would then disagree
+about conformance, which is the disagreement SPEC §3 exists to prevent.
+Undetermined already means that conformance cannot be established here, and that
+is what is true.
+
+**Why two of the four subjects are notes and not rules.** The encryption channel
+and the nesting depth are both consequences of decisions taken in §5 above, and
+neither can be closed without reversing one of them. Undetermined is what an
+encrypted metadata member yields because the format adds no encryption and forbids
+none; a rule against being skipped would be a rule about what a scanner does with
+an answer, which is beyond anything this document can require. Nesting is
+permitted and meaningless by SPEC §2.3, and a depth limit is only owed by
+something that recurses, which the format never asks anyone to do. Writing them
+down is what is left, and a property nobody wrote down is one the next implementer
+rediscovers.

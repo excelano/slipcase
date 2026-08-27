@@ -47,6 +47,7 @@ MODE_REGULAR = 0o100644
 MODE_DIRECTORY = 0o040755
 MODE_SYMLINK = 0o120777
 MODE_FIFO = 0o010644
+MODE_SETUID_REGULAR = 0o104755
 
 ZIP_PASSWORD = b"conformance"
 
@@ -528,6 +529,27 @@ case("accept/payload-name-trailing-dot")(lambda: container("report."))
 case("accept/payload-nested-container")(
     lambda: container("inner.pdf.slpc", payload=container("inner.pdf"))
 )
+case("accept/payload-name-bidi-override")(
+    lambda: container("report\u202Efdp.exe")
+)
+case("accept/payload-setuid-external-attributes")(
+    lambda: container(payload_mode=MODE_SETUID_REGULAR)
+)
+
+
+@case("accept/metadata-high-compression-ratio")
+def _() -> bytes:
+    """A conformant container whose metadata member inflates about 900 times.
+
+    Deliberately small in absolute terms — a quarter of a megabyte — so that it
+    sits under any bound SPEC 6 would lead an implementation to choose. What it
+    catches is the naive reading of that rule: a reader that refuses on the
+    ratio rather than on the size refuses this, and this is a container it MUST
+    NOT refuse. No fixture can test the bound itself, because the bound belongs
+    to the implementation and no verdict here can depend on it.
+    """
+    filler = "# " + "0" * (256 * 1024) + "\n"
+    return container(metadata=meta_toml(body=filler), method=DEFLATED)
 
 
 # --------------------------------------------------------------------------
@@ -563,6 +585,25 @@ def _() -> bytes:
     return build_zip(members)
 
 
+@case("reject/duplicate-metadata-members-agreeing")
+def _() -> bytes:
+    """Two byte-identical members named slipcase.metadata.toml.
+
+    The sibling above disagrees about payload.file, so a reader taking the last
+    duplicate rejects it for naming an absent payload and a reader taking the
+    first accepts it — the verdict follows whichever duplicate the library
+    happened to return, and a last-wins reader is credited with a check it never
+    ran. Here the two agree, so nothing downstream can fail and only counting
+    the entries detects anything.
+    """
+    members = [
+        Entry(META_NAME, meta_toml()),
+        Entry(META_NAME, meta_toml()),
+        Entry("report.pdf", PAYLOAD),
+    ]
+    return build_zip(members)
+
+
 @case("reject/duplicate-payload-members")
 def _() -> bytes:
     members = [
@@ -571,6 +612,31 @@ def _() -> bytes:
         Entry("report.pdf", b"a second member with the same name\n"),
     ]
     return build_zip(members)
+
+
+@case("reject/archive-preceded-by-data")
+def _() -> bytes:
+    """A conformant container with a self-extracting-style stub in front of it.
+
+    Every offset in the end of central directory record is now short by the
+    length of the stub. Info-ZIP, Python's zipfile and the Rust zip crate all
+    recover by measuring the discrepancy and adding it back, which is what SPEC
+    2.1 declines to do: the offsets are taken from the start of the file.
+    """
+    return b"MZ" + b"\x00" * 4094 + container()
+
+
+@case("reject/two-archives-in-one-file")
+def _() -> bytes:
+    """Two whole containers, one after the other, naming different payloads.
+
+    A reader scanning backwards finds the second archive's record, whose offsets
+    are relative to where that archive begins and so land inside the first. A
+    reader adjusting for that reads the second container; one parsing forwards
+    reads the first. SPEC 2.1 refuses the file rather than picking, for the
+    reason it refuses duplicate names rather than picking.
+    """
+    return container("first.pdf") + container("second.pdf")
 
 
 # --------------------------------------------------------------------------

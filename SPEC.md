@@ -14,7 +14,7 @@ The key words **MUST**, **MUST NOT**, and **MAY** are to be interpreted as descr
 **Payload** — the archive member named by the `payload.file` key.
 **Implementation** — a program that reads or writes containers.
 
-Section 2 states properties of a container, each of which can be checked against a file. Section 3 states requirements on implementations, which cannot.
+Section 2 states properties of a container, each of which can be checked against a file. Section 3 states requirements on implementations. Some of those can be put to an implementation by handing it a container and reading what it reports; the rest govern what it then writes or displays, and can be checked only by watching it work.
 
 ## 2. The container
 
@@ -28,6 +28,8 @@ A container MUST be a ZIP archive containing:
 A container MAY contain any number of additional members. They have no defined meaning. A container is not made non-conformant by their presence, whatever their names.
 
 Member names are taken from the central directory. Where a member's local file header records a different name, the central directory is authoritative.
+
+The archive is located by scanning backwards from the end of the file for the end of central directory record. The offsets that record holds are taken from the start of the file, so a file whose central directory does not lie where they say is not a container. This excludes an archive preceded by other data, such as a self-extracting stub, and a file holding one archive after another. Some ZIP implementations read both by adjusting the recorded offsets against wherever the archive begins; a container needs no such adjustment.
 
 Names are decoded before they are compared: as UTF-8 where general purpose bit 11 is set, and as CP437 otherwise. Comparison is then exact over the decoded sequence of code points. It is case-sensitive, and no Unicode normalization is applied to either side. An implementation MUST apply the same decoding and the same comparison when matching `payload.file` against member names.
 
@@ -100,15 +102,19 @@ The following are stated so that an implementer does not assume a restriction th
 An implementation:
 
 - MUST NOT depend on the order of members;
+- MUST establish the uniqueness required by §2.1 by enumerating central directory entries, and MUST NOT rely on a name-keyed lookup that resolves duplicate names to a single entry;
 - MUST locate the payload by `payload.file` alone — never by position, and never by the naming convention in Appendix B;
 - MUST preserve keys in the metadata that it does not recognize, and MUST NOT reject a container because of them;
 - MUST preserve members that it does not recognize when rewriting a container;
 - MUST write only the payload, and the metadata member if it needs it, when extracting — other members MUST NOT be written to disk;
+- MUST NOT replace an existing file when writing the payload, unless the caller has explicitly asked for replacement;
+- MUST create the payload with the permissions a newly created file would ordinarily receive, and MUST NOT apply permission bits recorded in the archive;
 - MUST reject a container whose `payload.file` violates §2.3, rather than sanitizing it;
+- MUST render the Unicode bidirectional formatting characters (U+061C, U+200E–U+200F, U+202A–U+202E, U+2066–U+2069) in an escaped form when it displays `payload.file` or a member name, rather than applying them;
 - MUST NOT report a container whose `slipcase_version` it does not recognize as conformant to a version it does recognize;
 - MUST NOT report a container as conformant, or as non-conformant, when it cannot read the metadata member (§2.2).
 
-Nothing else here is a security requirement. Resource limits when parsing ZIP or TOML are the concern of whatever libraries an implementation uses, and apply equally to every consumer of those formats.
+Several of these are security requirements. The one that is not stated here is in §6, because bounding what a reader spends is something it must do before it knows whether it is holding a container at all.
 
 ## 4. File extension and media type
 
@@ -119,6 +125,20 @@ Neither appears inside a container. A container is identified by opening it and 
 ## 5. Out of scope for this version
 
 This version defines no signature or attestation mechanism, no encryption of its own, no aggregation of multiple payloads, no checksum or fixity key, and no vocabulary of descriptive metadata keys. It takes no position on whether a container may be modified after it is written.
+
+## 6. Security considerations
+
+**Identifying a container is a parse of untrusted input.** A reader cannot know whether a file is a container without decompressing the metadata member and parsing it as TOML, and it must do that before anything about the file has been established. This is not the position of a general ZIP consumer, which chooses what to extract and may decline. Deflate can return a little over a thousand bytes for every byte it is given, before whatever the TOML parser then spends, and a reader invoked automatically — a scanner, an indexer, a shell extension asked for a preview — is invoked on whatever happens to be in the directory.
+
+An implementation MUST bound the decompressed size of the metadata member, and the depth to which it parses that member, and MUST report a container exceeding either bound as undetermined rather than as non-conformant.
+
+The bounds themselves are a matter for the implementation. A number fixed here would be wrong for a reader running on a phone and wrong again for one running over an archive, and the format has no way to know which it is. Undetermined is the verdict because §2.2 already gives that answer for a metadata member that cannot be read, and a reader answering non-conformant instead would be calling a large but legitimate container malformed on the strength of its own configuration.
+
+**Undetermined can be arranged.** A container whose metadata member is encrypted is undetermined by §2.2, which follows from the format defining no encryption of its own and forbidding none. The consequence is worth stating plainly: a program treating undetermined as *skip* can be made to skip on purpose, while the payload sits in the same archive unencrypted and legible to anything that never consulted the metadata. Undetermined is a reason to look further, not a reason to stop.
+
+**Nesting is not bounded.** §2.3 permits a container as its own payload and assigns the arrangement no meaning, and nothing in this specification limits how deep it may go. Anything that follows a payload into another container needs a depth limit of its own. A reader that does not recurse has nothing to do here.
+
+**A member name is attacker-controlled text.** §2.3 constrains `payload.file` enough that it cannot express a path, and no further: every remaining name is one a writer was entitled to pack. It is still a string a person reads in order to decide whether to open something, which is what the display rule in §3 is for, and it is still a string that will become a filename on some filesystem whose rules this specification does not know. An implementation that cannot write the name it was given has a problem to report rather than a name to change.
 
 ## Appendix A. Example (non-normative)
 

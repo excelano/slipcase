@@ -253,6 +253,24 @@ section = "2.3"
 expect = "accept"
 note = "Payload is itself a conformant container. Requires no special handling."
 
+[[case]]
+id = "accept/payload-name-bidi-override"
+section = "2.3"
+expect = "accept"
+note = "payload.file is report<U+202E>fdp.exe, a legal filename on every filesystem and conformant under §2.3, which excludes the C0 controls and nothing else. §3 requires that it be displayed escaped rather than applied; that is a requirement on programs and this file cannot test it. What this file tests is that a reader does not reject the name."
+
+[[case]]
+id = "accept/payload-setuid-external-attributes"
+section = "2.5"
+expect = "accept"
+note = "Payload member records mode 04755 in its external attributes. §2.5 forbids rejecting a container over external attributes, and §3 forbids applying them when extracting. Both halves matter and only the first is testable here."
+
+[[case]]
+id = "accept/metadata-high-compression-ratio"
+section = "2.2"
+expect = "accept"
+note = "Metadata member deflates about 900:1, from a quarter of a megabyte. Conformant, and small enough to sit under any bound §6 would lead an implementation to set. A reader that bounds the ratio rather than the size refuses this and is wrong; the bound §6 requires cannot itself be tested by a fixture, because it belongs to the implementation."
+
 # ---------------------------------------------------------------------------
 # Reject — §2.1 structure
 # ---------------------------------------------------------------------------
@@ -294,10 +312,28 @@ expect = "reject"
 note = "Two members named slipcase.metadata.toml with different content. §2.1 requires exactly one."
 
 [[case]]
+id = "reject/duplicate-metadata-members-agreeing"
+section = "2.1"
+expect = "reject"
+note = "Two byte-identical members named slipcase.metadata.toml. §2.1 requires exactly one. The case above disagrees about payload.file, so a last-wins reader rejects it on the absent payload and never counts anything; here the duplicates agree and nothing downstream can fail, so only enumerating the central directory detects it."
+
+[[case]]
 id = "reject/duplicate-payload-members"
 section = "2.1"
 expect = "reject"
 note = "Two members whose names both equal payload.file. §2.1 requires exactly one."
+
+[[case]]
+id = "reject/archive-preceded-by-data"
+section = "2.1"
+expect = "reject"
+note = "A conformant container with 4 KB of self-extracting-style stub in front of it, so every offset in the end of central directory record is short by that much. Info-ZIP, Python's zipfile and the Rust zip crate all read this by adding the discrepancy back. §2.1 takes the offsets from the start of the file and does not."
+
+[[case]]
+id = "reject/two-archives-in-one-file"
+section = "2.1"
+expect = "reject"
+note = "Two whole containers concatenated, naming different payloads. A reader scanning backwards finds the second record, whose offsets land inside the first archive; one parsing forwards finds the first container. §2.1 refuses the file rather than choosing, for the reason it refuses duplicate member names rather than choosing."
 
 # ---------------------------------------------------------------------------
 # Reject — §2.1 name matching
