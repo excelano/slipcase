@@ -132,6 +132,8 @@ This version defines no signature or attestation mechanism, no encryption of its
 
 An implementation MUST bound the decompressed size of the metadata member, and the depth to which it parses that member, and MUST report a container exceeding either bound as undetermined rather than as non-conformant.
 
+The size a central directory records for a member is not that bound. Nothing checks it against what the member inflates to, and mainstream ZIP implementations do not enforce it, so a directory entry declaring a hundred bytes may still yield two hundred megabytes. It is worth reading before inflating, because it refuses the ordinary case cheaply, but the bound has to be applied to the bytes as they arrive.
+
 The bounds themselves are a matter for the implementation. A number fixed here would be wrong for a reader running on a phone and wrong again for one running over an archive, and the format has no way to know which it is. Undetermined is the verdict because §2.2 already gives that answer for a metadata member that cannot be read, and a reader answering non-conformant instead would be calling a large but legitimate container malformed on the strength of its own configuration.
 
 **Undetermined can be arranged.** A container whose metadata member is encrypted is undetermined by §2.2, which follows from the format defining no encryption of its own and forbidding none. The consequence is worth stating plainly: a program treating undetermined as *skip* can be made to skip on purpose, while the payload sits in the same archive unencrypted and legible to anything that never consulted the metadata. Undetermined is a reason to look further, not a reason to stop.
