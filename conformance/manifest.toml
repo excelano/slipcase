@@ -269,7 +269,7 @@ note = "Payload member records mode 04755 in its external attributes. §2.5 forb
 id = "accept/metadata-high-compression-ratio"
 section = "2.2"
 expect = "accept"
-note = "Metadata member deflates about 900:1, from a quarter of a megabyte. Conformant, and small enough to sit under any bound §6 would lead an implementation to set. A reader that bounds the ratio rather than the size refuses this and is wrong; the bound §6 requires cannot itself be tested by a fixture, because it belongs to the implementation."
+note = "Metadata member deflates about 900:1, from 64 KiB. Conformant, and small enough to sit under any bound §6 would lead an implementation to set. A reader that bounds the ratio rather than the size refuses this and is wrong; the bound §6 requires cannot itself be tested by a fixture, because it belongs to the implementation."
 
 # ---------------------------------------------------------------------------
 # Reject — §2.1 structure

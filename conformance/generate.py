@@ -541,14 +541,19 @@ case("accept/payload-setuid-external-attributes")(
 def _() -> bytes:
     """A conformant container whose metadata member inflates about 900 times.
 
-    Deliberately small in absolute terms — a quarter of a megabyte — so that it
-    sits under any bound SPEC 6 would lead an implementation to choose. What it
-    catches is the naive reading of that rule: a reader that refuses on the
+    Deliberately small in absolute terms — 64 KiB — so that it sits under any
+    bound SPEC 6 would lead an implementation to choose. It was a quarter of a
+    megabyte for half a day, which was too close: measured 2026-08-27, a viewer
+    that renders the document costs about 200 MB for that much metadata, so a
+    bound set with that measurement in hand would have refused a container this
+    corpus says must be accepted.
+
+    What it catches is the naive reading of SPEC 6: a reader that refuses on the
     ratio rather than on the size refuses this, and this is a container it MUST
     NOT refuse. No fixture can test the bound itself, because the bound belongs
     to the implementation and no verdict here can depend on it.
     """
-    filler = "# " + "0" * (256 * 1024) + "\n"
+    filler = "# " + "0" * (64 * 1024) + "\n"
     return container(metadata=meta_toml(body=filler), method=DEFLATED)
 
 
