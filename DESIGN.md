@@ -132,6 +132,27 @@ is not a container, and a tool that appends bytes to files breaks every containe
 it touches. Neither is a thing this format asks for: a container is a file with an
 extension of its own, not a document smuggled inside another.
 
+**Why the record must also end the file, and count its members once.** The rule
+above was written against the two shapes anybody had thought of, and a review on
+2026-08-27 found three more, all in the same record and all measured against the
+reference implementation. Its end of central directory record carries two entry
+counts — records on this disk, records in total — which every writer sets equal
+and which that implementation and its ZIP dependency read from *different* fields;
+declaring three and two hid a duplicate payload behind a conformant verdict. Its
+comment length can be made to run past the end of the file, so that a reader
+taking the last signature it finds and a reader checking the length before
+believing it resolve two different directories. And which fields carry the Zip64
+sentinel decides which of two records a reader believes.
+
+None of the three is a disagreement about what the file means. Each is a
+disagreement about which bytes the file *is*, and every one of them ends with two
+conforming readers holding the same file and naming different payloads — which is
+what §2.1 already refused for duplicate member names and for two archives in one
+file, arriving a third time through a smaller door. So the record is required to
+be internally consistent rather than merely present, and a reader is spared
+having to match another reader's field-by-field behaviour to stay in agreement
+with it.
+
 **Why comparison is exact.** Case-sensitive and without normalization, because
 both alternatives are worse: case folding depends on locale, and normalizing means
 a payload can be found under a name it does not carry. The cost falls on writers

@@ -619,6 +619,76 @@ def _() -> bytes:
     return build_zip(members)
 
 
+def _duplicate_payload_zip(**zip_options) -> bytearray:
+    """Three central directory entries, the last a duplicate payload.
+
+    The shape every case below hides from one parser or the other: whether a
+    reader sees the third entry is the whole question.
+    """
+    return bytearray(
+        build_zip(
+            [
+                Entry(META_NAME, meta_toml()),
+                Entry("report.pdf", PAYLOAD),
+                Entry("report.pdf", b"a second member with the same name\n"),
+            ],
+            **zip_options,
+        )
+    )
+
+
+@case("reject/eocd-counts-disagree")
+def _() -> bytes:
+    """The end of central directory record's two counts do not match.
+
+    Byte 8 is *entries on this disk* and byte 10 is *entries in total*. Every
+    writer sets them equal; read apart they choose how many members a reader
+    sees. Measured 2026-08-27 against the reference implementation, which read
+    the total while its ZIP dependency read the count on this disk: declaring 3
+    and 2 hid a duplicate payload behind a conformant verdict, and the payload
+    served was the one the count never covered.
+    """
+    data = _duplicate_payload_zip()
+    at = data.rfind(b"PK\x05\x06")
+    struct.pack_into("<H", data, at + 10, 2)
+    return bytes(data)
+
+
+@case("reject/eocd-not-at-end-of-file")
+def _() -> bytes:
+    """The record's comment length runs past the end of the file.
+
+    A reader that takes the last signature it finds accepts this; one that
+    checks the length and keeps looking finds an earlier record and a different
+    central directory. Two readers, two payloads, and the file decides nothing.
+    """
+    data = _duplicate_payload_zip()
+    at = data.rfind(b"PK\x05\x06")
+    struct.pack_into("<H", data, at + 20, 0xFFFF)
+    return bytes(data)
+
+
+@case("reject/zip64-gate-mismatch")
+def _() -> bytes:
+    """Only the directory-size field carries the Zip64 sentinel.
+
+    Which of the two records a reader believes depends on which fields it
+    accepts as the signal to look for a Zip64 one. The plain record here is
+    complete and consistent and simply understates the count; the Zip64 record
+    beside it holds the truth, and the third member is visible only to a reader
+    that goes and looks.
+    """
+    data = _duplicate_payload_zip(zip64=True)
+    z64 = data.find(struct.pack("<I", SIG_ZIP64_EOCD))
+    real_offset = struct.unpack_from("<Q", data, z64 + 48)[0]
+    at = data.rfind(b"PK\x05\x06")
+    struct.pack_into("<H", data, at + 8, 2)
+    struct.pack_into("<H", data, at + 10, 2)
+    struct.pack_into("<I", data, at + 12, 0xFFFFFFFF)
+    struct.pack_into("<I", data, at + 16, real_offset)
+    return bytes(data)
+
+
 @case("reject/archive-preceded-by-data")
 def _() -> bytes:
     """A conformant container with a self-extracting-style stub in front of it.

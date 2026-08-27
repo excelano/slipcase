@@ -324,6 +324,24 @@ expect = "reject"
 note = "Two members whose names both equal payload.file. §2.1 requires exactly one."
 
 [[case]]
+id = "reject/eocd-counts-disagree"
+section = "2.1"
+expect = "reject"
+note = "The end of central directory record declares 3 entries on this disk and 2 in total. Every writer sets the two equal; read apart they decide how many members a reader sees, and the third here is a duplicate payload. Measured against the reference implementation on 2026-08-27: it read the total while its ZIP dependency read the count on this disk, so the duplicate was invisible to the check and the payload served was the one the count never covered."
+
+[[case]]
+id = "reject/eocd-not-at-end-of-file"
+section = "2.1"
+expect = "reject"
+note = "The record's comment length runs past the end of the file. A reader taking the last signature it finds accepts it; one checking the length keeps looking and finds an earlier record with a different central directory. §2.1 requires the offsets to be taken from the start of the file, and a record that does not end the file is not the one that describes it."
+
+[[case]]
+id = "reject/zip64-gate-mismatch"
+section = "2.1"
+expect = "reject"
+note = "Only the directory-size field carries the Zip64 sentinel; the plain record is otherwise complete, consistent, and understates the count by one. Which record a reader believes depends on which fields it treats as the signal to look for a Zip64 one, and the member visible only to a reader that looks is a duplicate payload."
+
+[[case]]
 id = "reject/archive-preceded-by-data"
 section = "2.1"
 expect = "reject"

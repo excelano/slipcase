@@ -31,6 +31,8 @@ Member names are taken from the central directory. Where a member's local file h
 
 The archive is located by scanning backwards from the end of the file for the end of central directory record. The offsets that record holds are taken from the start of the file, so a file whose central directory does not lie where they say is not a container. This excludes an archive preceded by other data, such as a self-extracting stub, and a file holding one archive after another. Some ZIP implementations read both by adjusting the recorded offsets against wherever the archive begins; a container needs no such adjustment.
 
+That record MUST also end the file, its own comment included, and MUST describe a single-disk archive: the count of records on this disk and the count in total are equal, and both disk numbers are zero. Where a Zip64 end of central directory record is present, the two MUST agree about how many entries the directory holds and where it begins. Each of these is a field two readers can be made to read differently, and a file whose member list depends on which reader opened it is not a container whatever else it may be.
+
 Names are decoded before they are compared: as UTF-8 where general purpose bit 11 is set, and as CP437 otherwise. Comparison is then exact over the decoded sequence of code points. It is case-sensitive, and no Unicode normalization is applied to either side. An implementation MUST apply the same decoding and the same comparison when matching `payload.file` against member names.
 
 ### 2.2 The metadata member
