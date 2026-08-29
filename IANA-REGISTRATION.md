@@ -81,6 +81,19 @@ Security considerations:
    treat it with whatever care its platform's rules for downloaded content
    require.
 
+   Two practices follow from that and are not requirements of this
+   specification, which takes no position on what a consumer does with a
+   payload once it has one. Where the host platform records that a file
+   arrived from elsewhere, an implementation that extracts a payload can put
+   the same record on the copy, so that the platform's own handling of
+   downloaded content reaches the payload rather than stopping at the
+   container. And where a consumer reports what it found rather than deciding
+   for the user, what it reports should come from the container: the
+   specification's requirement that an extracted payload not receive the
+   archive's permission bits means a payload stored executable does not extract
+   executable, which is a fact a consumer can state without guessing at the
+   payload's type from its name.
+
    The metadata is unauthenticated. This version of the format defines no
    signature, attestation, checksum, or fixity mechanism. Nothing inside a
    container establishes who wrote it, or that its metadata describes its
@@ -210,7 +223,7 @@ Other Information & Comments:
    by reading the metadata member rather than by trusting a name.
 
 Contact Person:
-   (see "Three things to settle" below)
+   (see "What is left to settle" below)
 
 Author:
    David M. Anderson
@@ -221,7 +234,10 @@ Change controller:
 
 ---
 
-## Three things to settle before it is sent
+## What is left to settle before it is sent
+
+Not counted in the heading, because the count in it would have been wrong twice
+by now.
 
 **The contact address, which the registry publishes and keeps.** The entry
 carries a name and an address permanently, lightly obfuscated on IANA's own
@@ -236,13 +252,17 @@ easier before the question is asked than after. Either mark 1.0 final, which
 §2.4 and `CONTRIBUTING.md` already have rules for, or be ready to say what is
 still open.
 
-**Whether the security section says enough about handing a payload to a system
-handler.** The paragraph above says a consumer should apply its platform's rules
-for downloaded content. Slipcase's own answers to that (what it does with an
-executable payload, and what it does with a container that arrived from
-elsewhere) are being settled on Windows now, and the registration should not
-claim more or less than the implementation does. Reconcile the two before
-sending.
+~~**Whether the security section says enough about handing a payload to a system
+handler.**~~ **Settled 2026-08-29, and the section now says it.** Both of the
+questions this was waiting on were taken: an executable payload is reported and
+not gated, and the extracted copy is not executable because the specification
+forbids applying the archive's permission bits; and a container that arrived
+from elsewhere has that fact carried onto the payload where the platform records
+such a thing. Neither is a requirement this specification imposes, so both are
+written as practices rather than as rules, which is what keeps the registration
+from claiming more than §3 says. `excelano/slipcase-desktop`'s `DESIGN.md` §5
+holds the reasoning and its `CHECKLIST.md` holds the measurements on all three
+platforms.
 
 ## If it is accepted
 
