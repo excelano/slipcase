@@ -165,12 +165,12 @@ Interoperability considerations:
    container declaring a higher one.
 
    A conformance corpus accompanies the specification, at
-   <https://github.com/excelano/slipcase/tree/main/conformance>. It gives an
+   <https://github.com/excelano/slipcase/tree/v1.0/conformance>. It gives an
    implementer a set of containers with recorded verdicts to check against.
 
 Published specification:
    slipcase - Specification, version 1.0, final.
-   <https://github.com/excelano/slipcase/blob/main/SPEC.md>
+   <https://github.com/excelano/slipcase/blob/v1.0/SPEC.md>
 
    Dedicated to the public domain under CC0 1.0, so it may be implemented,
    quoted, or embedded by anyone.

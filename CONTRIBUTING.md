@@ -49,6 +49,13 @@ examples — do not. §2.4 is the rule; it governs this repository as much as it
 governs a reader. While the document was a draft, changes landed without moving
 the number, which is why nothing below 1.0 exists to compare against.
 
+A tag marks each revision of the specification, and `v1.0` is the text as
+declared final on 2026-08-29. It exists because the media type registration
+cites an address that has to outlive several years of commits, and a `blob/main`
+link follows the branch. So the tag names a revision rather than a version: an
+editorial change stays 1.0 under §2.4 and gets a tag of its own rather than
+moving this one, and a change that moves `slipcase_version` gets both.
+
 `conformance/` is what makes the distinction checkable rather than arguable. A
 change that alters no case's verdict is editorial; one that alters any case's
 verdict is not. Generate the corpus before and after and compare, which is what
