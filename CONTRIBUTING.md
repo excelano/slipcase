@@ -42,7 +42,15 @@ the case is a bug. See `conformance/README.md`.
 
 ## The version key
 
-While `SPEC.md` is marked draft, changes land without moving `slipcase_version`.
-Once it is final, any change to what counts as a conformant container moves that
-number, and editorial changes — corrections, clarifications, added examples — do
-not. §2.4 is the rule; it governs this repository as much as it governs a reader.
+`SPEC.md` is final as of 2026-08-29, so it is the second half of this rule that
+is now in force: any change to what counts as a conformant container moves
+`slipcase_version`, and editorial changes — corrections, clarifications, added
+examples — do not. §2.4 is the rule; it governs this repository as much as it
+governs a reader. While the document was a draft, changes landed without moving
+the number, which is why nothing below 1.0 exists to compare against.
+
+`conformance/` is what makes the distinction checkable rather than arguable. A
+change that alters no case's verdict is editorial; one that alters any case's
+verdict is not. Generate the corpus before and after and compare, which is what
+`DESIGN.md` records as the reason the cost of going final is smaller than it
+looks.

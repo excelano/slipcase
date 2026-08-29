@@ -209,6 +209,26 @@ rather than at any edit to this document, so the number moves only when
 something about containers does. Fixing a typo cannot invalidate a container
 written yesterday.
 
+**Why 1.0 is final, and what that costs.** Marked final on 2026-08-29, when the
+format acquired the three things that make a version worth freezing: a
+conformance corpus of 88 cases that two implementations agree on, a published
+library and a released application that read containers people other than their
+authors will write, and a media type registration asking IANA to record a
+permanent name. The last is what forced the question rather than merely raising
+it — a registration citing a specification that describes itself as unfinished
+invites the reviewer's first question, and the answer would have to be that the
+format is in fact settled, which is a thing to write in the document rather than
+in a reply.
+
+What it costs is the freedom `CONTRIBUTING.md` granted while the document was a
+draft: a change to what counts as a conformant container now moves
+`slipcase_version` instead of landing quietly. That is a smaller cost here than
+it looks, because §2.4 already says the number promises nothing to a program, so
+moving it breaks no contract — it announces. The corpus is what makes the
+distinction checkable: a change that alters no case's verdict is editorial, and
+one that alters any case's verdict is not, which is a test rather than a
+judgement.
+
 **Why conformance is relative to a version.** This specification can say whether a
 container declaring `1.0` conforms to it. It cannot say anything about one
 declaring `2.0`, because it does not know what `2.0` requires, and the same holds

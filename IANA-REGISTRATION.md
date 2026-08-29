@@ -160,7 +160,7 @@ Interoperability considerations:
    implementer a set of containers with recorded verdicts to check against.
 
 Published specification:
-   slipcase - Specification, version 1.0.
+   slipcase - Specification, version 1.0, final.
    <https://github.com/excelano/slipcase/blob/main/SPEC.md>
 
    Dedicated to the public domain under CC0 1.0, so it may be implemented,
@@ -223,7 +223,7 @@ Other Information & Comments:
    by reading the metadata member rather than by trusting a name.
 
 Contact Person:
-   (see "What is left to settle" below)
+   David M. Anderson <hello@excelano.com>
 
 Author:
    David M. Anderson
@@ -234,23 +234,32 @@ Change controller:
 
 ---
 
-## What is left to settle before it is sent
+## What had to be settled first, and how each was
 
-Not counted in the heading, because the count in it would have been wrong twice
-by now.
+**Nothing is outstanding: the template above is ready to send.** The heading no
+longer counts them, because the count in it would have been wrong twice by now.
+Each entry is kept struck rather than deleted, because what a question was before
+it was answered is the part a later reader needs.
 
-**The contact address, which the registry publishes and keeps.** The entry
-carries a name and an address permanently, lightly obfuscated on IANA's own
-pages and not at all in the mailing list archives, and it outlives whoever held
-the mailbox. A role address that Excelano controls is the better answer than a
-personal one. This is left blank rather than guessed at.
+~~**The contact address, which the registry publishes and keeps.**~~
+**Settled: `hello@excelano.com`.** The entry carries a name and an address
+permanently, lightly obfuscated on IANA's own pages and not at all in the
+mailing list archives, and it outlives whoever held the mailbox, so a role
+address Excelano controls beats a personal one. `hello@excelano.com` is the only
+one the company publishes — `excelano.com` carries it in three places, including
+as the contact for legal and privacy questions on the page both stores link to
+— so it is an address already demonstrated to deliver rather than one invented
+for this form.
 
-**`SPEC.md` still says `Status: draft`.** A vendor-tree registration does not
-require a published specification at all, let alone a final one, so this is not
-a blocker. It is what the reviewer will see first, and answering *why draft* is
-easier before the question is asked than after. Either mark 1.0 final, which
-§2.4 and `CONTRIBUTING.md` already have rules for, or be ready to say what is
-still open.
+~~**`SPEC.md` still says `Status: draft`.**~~ **Settled: 1.0 is final as of
+2026-08-29.** A vendor-tree registration does not require a published
+specification at all, let alone a finished one, so this was never a blocker. It
+was what the reviewer would see first, and the answer to *why draft* would have
+had to be that the format is in fact settled — which belongs in the document
+rather than in a reply to a review. `DESIGN.md` §3.2 records why, and
+`CONTRIBUTING.md`'s version rule has flipped to the half that was waiting: a
+change to what counts as a conformant container now moves `slipcase_version`,
+and the corpus is what decides which changes those are.
 
 ~~**Whether the security section says enough about handing a payload to a system
 handler.**~~ **Settled 2026-08-29, and the section now says it.** Both of the

@@ -1,7 +1,7 @@
 # slipcase — Specification
 
 **Version:** 1.0
-**Status:** draft
+**Status:** final
 
 A slipcase container is a ZIP archive that binds a single payload file to a metadata document describing it, so that the two travel as one file.
 
