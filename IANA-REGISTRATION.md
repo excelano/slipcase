@@ -24,13 +24,22 @@ or `slpc`, and `+zip` is a registered structured syntax suffix ([RFC
 both free.
 
 The form's fields are the RFC 6838 §5.6 template with three of the older RFC
-4288 names still on it. What follows is in the form's order.
+4288 names still on it, preceded by two of its own for the submitter. What
+follows is in the form's order, every field filled, so it is copied straight
+across with nothing to compose at the keyboard. The block below is the only copy
+— there is deliberately no second plain-text file to drift from it.
 
 ---
 
 ## The template
 
 ```text
+Your Full Name:
+   David M. Anderson
+
+Your E-mail:
+   hello@excelano.com
+
 Type name:
    application
 
