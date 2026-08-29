@@ -135,7 +135,16 @@ class Entry:
         encrypt: bool = False,
         dos_time: int = DOS_TIME,
         dos_date: int = DOS_DATE,
+        made_by: int = 0x031E,
+        external: int | None = None,
     ):
+        # Who wrote the archive, and what it recorded about the file. Both are
+        # per entry rather than per archive because the only case that needs
+        # them needs them to disagree with every other case: an MS-DOS creator
+        # records no Unix mode at all, and `external` is then a DOS attribute
+        # byte rather than a mode shifted into the high half.
+        self.made_by = made_by
+        self.external = external
         self.name, name_flag = self._encode(name)
         self.local_name = self._encode(local_name)[0] if local_name is not None else self.name
         self.data = data
@@ -207,7 +216,7 @@ def build_zip(entries: list[Entry], *, comment: bytes = b"", zip64: bool = False
         out += struct.pack(
             "<IHHHHHHIIIHHHHHII",
             SIG_CENTRAL,
-            0x031E,  # made by Unix, version 3.0
+            entry.made_by,  # Unix, version 3.0, unless the entry says otherwise
             20,
             entry.flags,
             entry.method,
@@ -221,7 +230,7 @@ def build_zip(entries: list[Entry], *, comment: bytes = b"", zip64: bool = False
             0,  # comment length
             0,  # disk number
             0,  # internal attributes
-            entry.mode << 16,
+            entry.mode << 16 if entry.external is None else entry.external,
             offset,
         )
         out += entry.name + entry.extra
@@ -535,6 +544,42 @@ case("accept/payload-name-bidi-override")(
 case("accept/payload-setuid-external-attributes")(
     lambda: container(payload_mode=MODE_SETUID_REGULAR)
 )
+
+
+@case("accept/payload-no-mode-recorded")
+def _() -> bytes:
+    """A conformant container written by an MS-DOS tool, so no member records a
+    Unix mode.
+
+    Every other `accept` case here is written by a Unix creator and records
+    0644, which means the corpus had no container at all for the question *what
+    does a reader say when the archive records no mode?* — and a reader has to
+    answer it, because the answer is *nothing* and the obvious implementation
+    answers 0664 instead.
+
+    That is not hypothetical. A ZIP library's `unix_mode()` invents a mode for a
+    DOS entry rather than returning nothing, so a reader that asks the library
+    rather than reading the external attributes reports a mode that was never
+    recorded — and an application that shows *this payload is executable* off
+    the back of it says so about a file nobody marked. `excelano/slipcase-desktop`
+    hit exactly that and reads the attributes directly because of it; its own
+    walkthrough then found it had no fixture to check the fix against, and made
+    one by hand on one platform. This is that container, in the place all three
+    of its platforms can reach.
+
+    Creator system 0 with version 2.0, which `unzip -Z` reports as `2.0 fat`,
+    and external attributes 0x20 — the DOS archive bit, which is what a DOS tool
+    sets and is not a mode in the high sixteen bits. Nothing here is
+    non-conformant: §2.5 forbids rejecting a container over external attributes,
+    and this case is about what a reader *reports*, which §3 leaves to it.
+    """
+    dos = {"made_by": 0x0014, "external": 0x20}
+    return build_zip(
+        [
+            Entry(META_NAME, meta_toml("report.pdf", "1.0"), **dos),
+            Entry("report.pdf", PAYLOAD, **dos),
+        ]
+    )
 
 
 @case("accept/metadata-high-compression-ratio")

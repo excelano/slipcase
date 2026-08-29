@@ -266,6 +266,12 @@ expect = "accept"
 note = "Payload member records mode 04755 in its external attributes. §2.5 forbids rejecting a container over external attributes, and §3 forbids applying them when extracting. Both halves matter and only the first is testable here."
 
 [[case]]
+id = "accept/payload-no-mode-recorded"
+section = "2.5"
+expect = "accept"
+note = "Both members written by an MS-DOS creator, so the external attributes carry the DOS archive bit and no Unix mode. Conformant by §2.5, and the only container here that records no mode at all: every other accept case is written by a Unix tool and records 0644. What it exercises is what a reader reports rather than whether it accepts — a reader that asks a ZIP library for a mode is handed an invented 0664 and will describe a file nobody marked."
+
+[[case]]
 id = "accept/metadata-high-compression-ratio"
 section = "2.2"
 expect = "accept"
