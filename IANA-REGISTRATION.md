@@ -6,10 +6,21 @@ for use inside a private or otherwise limited environment, and §3.4 says a type
 meant for public distribution does not belong in it. Slipcase is going into two
 application stores, so the type needs a registered name.
 
-This file is the draft registration, filled in and ready to paste. It is not the
-specification and amends nothing: SPEC §4 continues to name the `x.` type until
-IANA answers, and the section headed *If it is accepted* below is what changes
-when it does.
+**Submitted 2026-08-29.** This file is what went in, field for field. It is not
+the specification and amends nothing: SPEC §4 continues to name the `x.` type
+until IANA answers, and the section headed *If it is accepted* below is what
+changes when it does.
+
+What happens next is not ours to drive. The form posts to `media-types@iana.org`
+for public discussion, then a designated expert reviews it, then IANA registers
+it or comes back with questions. Anything that arrives should be answered
+against this file rather than composed fresh, since every field here is drawn
+from SPEC §6, §3 and §2.1 rather than paraphrased — an answer is a citation, and
+a reply that reasons differently from the text under review is how a
+registration and its specification start to disagree.
+
+**If a question does change a field, change it here first.** This file is the
+copy of record, and a form is not somewhere a later reader can look.
 
 **The route is the vendor tree.** `application/vnd.excelano.slipcase+zip`, by
 expert review, through the form at <https://www.iana.org/form/media-types>. It
@@ -289,7 +300,10 @@ already written has to be rewritten, and only the platform databases and the
 documents change. It is not, however, the six places it looks like from SPEC §4.
 Measured on 2026-08-29, `application/x.slipcase+zip` appears in 18 files across
 the two repositories, and the Linux icon and MIME package are *named* for the
-type as well, so the rename reaches filenames and not only contents.
+type as well, so the rename reaches filenames and not only contents. Nineteen
+now: `excelano.com`'s `.htaccess` gained an `AddType` the same day, so that the
+sample container the Microsoft Store's certification reviewer downloads is
+served as something rather than guessed at.
 
 In `excelano/slipcase`: SPEC §4 names the registered type and records
 `application/x.slipcase+zip` as the name it supersedes, and `DESIGN.md` gains the
