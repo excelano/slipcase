@@ -363,6 +363,16 @@ override with no terminator runs to the end of the paragraph rather than the end
 of the string, so an implementation relying on containment has to emit the
 terminator itself and cannot trust the name to carry one.
 
+The rule names one interpreter and there are others, which is why §3 carries a
+sentence generalising it rather than a second requirement. Bidi can be stated as
+a requirement because the character set is enumerable and the obligation is
+identical wherever a name is shown. Markup cannot: the reserved set belongs to
+whatever the name is being rendered into, and a corpus that hands a reader a
+container can watch what it reports and not what a notification daemon does with
+the string afterwards. The instance that could be stated was stated, in §2.3 —
+which excludes the C0 controls a terminal acts on, and so closes the medium with
+the worst consequences at the format rather than leaving it to display.
+
 **The version rule.** This was once phrased as a prohibition on assuming a
 container could be read. That constrained what a program believes rather than what
 it does, and §5 gives the test it failed: a rule nothing can check is an opinion,

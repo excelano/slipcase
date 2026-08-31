@@ -116,6 +116,8 @@ An implementation:
 - MUST NOT report a container whose `slipcase_version` it does not recognize as conformant to a version it does recognize;
 - MUST NOT report a container as conformant, or as non-conformant, when it cannot read the metadata member (§2.2).
 
+The bidirectional requirement is one instance of a general obligation: a name is displayed and never interpreted. Where an implementation renders `payload.file` into a medium that parses what it is handed — markup in a graphical toolkit or a desktop notification, HTML in a generated report — the characters that medium reserves have to be neutralised there as well. That is not stated as a requirement because the medium belongs to the implementation rather than to this specification, and a conformance suite cannot observe it.
+
 Several of these are security requirements. The one that is not stated here is in §6, because bounding what a reader spends is something it must do before it knows whether it is holding a container at all.
 
 ## 4. File extension and media type
