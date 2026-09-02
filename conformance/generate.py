@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the slipcase conformance corpus described by manifest.toml.
+"""Generate the Slipcase conformance corpus described by manifest.toml.
 
 Every container is built here rather than committed as a blob, so the corpus is
 reviewable as source and reproducible byte for byte. Nothing is random and every

@@ -1,6 +1,6 @@
-# slipcase conformance corpus — manifest
+# Slipcase conformance corpus — manifest
 #
-# Test containers for slipcase 1.0. See README.md in this directory for what the
+# Test containers for Slipcase 1.0. See README.md in this directory for what the
 # corpus is for, the verdict vocabulary, and what it cannot test.
 #
 # THIS FILE IS NOT NORMATIVE. Where a case and SPEC.md disagree, the specification
