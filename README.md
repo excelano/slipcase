@@ -25,4 +25,6 @@ That is a conformant container. `unzip` gets it back.
 
 `SPEC.md` is the specification. `DESIGN.md` records the design and the reasoning behind each rule.
 
+<https://slipcaseformat.org> presents both as web pages, alongside the implementations that exist. The site is generated from this repository and this repository stays the authority: where the two differ, these files are right and the site is stale.
+
 To the extent possible under law, Excelano LLC has waived all copyright and related or neighboring rights to Slipcase, dedicating it to the public domain under [CC0 1.0](LICENSE). Anyone can implement it — or quote, fork, or embed the text — without obligation to this project.
