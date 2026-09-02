@@ -1,6 +1,6 @@
 # Contributing
 
-slipcase is a specification. Most of what it needs is not code.
+Slipcase is a specification. Most of what it needs is not code.
 
 ## Contributions are dedicated to the public domain
 

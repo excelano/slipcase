@@ -1,4 +1,4 @@
-# slipcase
+# Slipcase
 
 A container file format that attaches metadata to a file.
 
@@ -25,4 +25,4 @@ That is a conformant container. `unzip` gets it back.
 
 `SPEC.md` is the specification. `DESIGN.md` records the design and the reasoning behind each rule.
 
-To the extent possible under law, Excelano LLC has waived all copyright and related or neighboring rights to slipcase, dedicating it to the public domain under [CC0 1.0](LICENSE). Anyone can implement it — or quote, fork, or embed the text — without obligation to this project.
+To the extent possible under law, Excelano LLC has waived all copyright and related or neighboring rights to Slipcase, dedicating it to the public domain under [CC0 1.0](LICENSE). Anyone can implement it — or quote, fork, or embed the text — without obligation to this project.

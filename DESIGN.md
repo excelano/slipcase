@@ -1,4 +1,4 @@
-# slipcase — Design Document
+# Slipcase — Design Document
 
 **Status:** design draft.
 **Document version:** draft, 2026-08-20
@@ -18,12 +18,12 @@ subject.
 
 ## 1. What this is about
 
-`README.md` states what slipcase is and the problem it addresses: most files have
+`README.md` states what Slipcase is and the problem it addresses: most files have
 nowhere to put metadata, and the usual answers — filenames, sidecars, a database —
 each fail as soon as the file moves. This document assumes that framing and takes
 up where it leaves off.
 
-One property of it bears on almost every decision below. slipcase is
+One property of it bears on almost every decision below. Slipcase is
 domain-neutral: nothing in the format knows about any particular industry, system,
 or kind of document. Where a rule could have been bent toward one kind of payload,
 it was not.
@@ -33,7 +33,7 @@ it was not.
 ## 2. Created with ordinary tools
 
 A container can be built with `zip` and a text editor, and its contents recovered
-with `unzip`. No slipcase implementation is required at either end, on any
+with `unzip`. No Slipcase implementation is required at either end, on any
 platform, and there is no incantation to get right:
 
 ```bash
@@ -183,7 +183,7 @@ examined and rejected in §5.
 ### 3.2 The metadata member — SPEC §2.2, §2.4
 
 **Why it is mandatory, and why its name is fixed.** There is no such thing as a
-slipcase container without metadata. The fixed name is what makes the payload
+Slipcase container without metadata. The fixed name is what makes the payload
 discoverable, since the payload's own name is not known in advance.
 
 **Why the TOML version is pinned.** An implementer otherwise does not know which
@@ -397,7 +397,7 @@ library's business.
 
 ## 5. Non-goals
 
-**Signatures.** Out of scope. Signing layers above slipcase, or arrives in a later
+**Signatures.** Out of scope. Signing layers above Slipcase, or arrives in a later
 specification version with its own member, which an implementation written against
 1.0 will open and ignore. Anything built on top must account for the absence of a
 canonical serialization: hash what was actually signed, rather than assuming a

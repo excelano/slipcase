@@ -1,6 +1,6 @@
 # Conformance corpus
 
-Test containers for slipcase 1.0, described by `manifest.toml` and built by
+Test containers for Slipcase 1.0, described by `manifest.toml` and built by
 `generate.py`.
 
 ```
