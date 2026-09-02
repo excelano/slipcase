@@ -1,6 +1,6 @@
 # slipcase — Specification
 
-**Version:** 1.0
+**Version:** 1.0  
 **Status:** final
 
 A slipcase container is a ZIP archive that binds a single payload file to a metadata document describing it, so that the two travel as one file.
@@ -9,9 +9,9 @@ A slipcase container is a ZIP archive that binds a single payload file to a meta
 
 The key words **MUST**, **MUST NOT**, and **MAY** are to be interpreted as described in BCP 14 ([RFC 2119](https://www.rfc-editor.org/rfc/rfc2119), [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174)) when, and only when, they appear in capitals.
 
-**Container** — a ZIP archive conforming to §2.
-**Metadata member** — the archive member named `slipcase.metadata.toml`.
-**Payload** — the archive member named by the `payload.file` key.
+**Container** — a ZIP archive conforming to §2.  
+**Metadata member** — the archive member named `slipcase.metadata.toml`.  
+**Payload** — the archive member named by the `payload.file` key.  
 **Implementation** — a program that reads or writes containers.
 
 Section 2 states properties of a container, each of which can be checked against a file. Section 3 states requirements on implementations. Some of those can be put to an implementation by handing it a container and reading what it reports; the rest govern what it then writes or displays, and can be checked only by watching it work.
