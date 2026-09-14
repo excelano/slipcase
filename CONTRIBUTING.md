@@ -26,7 +26,7 @@ Do not open a public issue for a security defect. Use **Report a vulnerability**
 under the Security tab, which reaches the maintainers privately.
 
 For a specification the plausible defects are in the rules rather than in code: a
-name that the `payload.file` exclusions fail to exclude, or an ambiguity that lets
+name that the `content.file` exclusions fail to exclude, or an ambiguity that lets
 two conforming readers resolve the same container differently.
 
 ## A rule and its reasoning travel together
@@ -42,12 +42,12 @@ the case is a bug. See `conformance/README.md`.
 
 ## The version key
 
-`SPEC.md` is final as of 2026-08-29, so it is the second half of this rule that
-is now in force: any change to what counts as a conformant container moves
-`slipcase_version`, and editorial changes — corrections, clarifications, added
-examples — do not. §2.4 is the rule; it governs this repository as much as it
-governs a reader. While the document was a draft, changes landed without moving
-the number, which is why nothing below 1.0 exists to compare against.
+`SPEC.md` 1.1 is a draft. While a version is a draft, changes to it land without
+moving the number, which is why nothing below 1.0 exists to compare against. Once
+a version is declared final, any change to what counts as a conformant container
+moves `slipcase_version`, and editorial changes — corrections, clarifications,
+added examples — do not. §2.4 is the rule; it governs this repository as much as
+it governs a reader. 1.0 is final as of 2026-08-29.
 
 A tag marks each revision of the specification, and `v1.0` is the text as
 declared final on 2026-08-29. It exists because the media type registration

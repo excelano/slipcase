@@ -2,21 +2,21 @@
 
 A container file format that attaches metadata to a file.
 
-A `.slpc` file is a ZIP archive holding a payload file of any type together with a TOML metadata file describing it. The two become one file, so copying, moving, or sending the payload carries its metadata along.
+A `.slpc` file is a ZIP archive holding a content file of any type together with a TOML document, the flyleaf, describing it. The two become one file, so copying, moving, or sending the content file carries its flyleaf along.
 
-Most files have nowhere to put metadata. Some formats have an embedded slot, but writing to it means modifying the payload, and a great many types have no slot at all. Filenames carry very little. Sidecar files sit beside the payload until someone copies one and not the other. Databases hold metadata well until the file leaves the system, and then the two are separated with nothing to reconnect them.
+Most files have nowhere to put metadata. Some formats have an embedded slot, but writing to it means modifying the file itself, and a great many types have no slot at all. Filenames carry very little. Sidecar files sit beside the file until someone copies one and not the other. Databases hold metadata well until the file leaves the system, and then the two are separated with nothing to reconnect them.
 
 A container needs no special tooling to make or to read:
 
 ```bash
-cat > slipcase.metadata.toml <<'TOML'
-slipcase_version = "1.0"
+cat > slipcase.flyleaf.toml <<'TOML'
+slipcase_version = "1.1"
 
-[payload]
+[content]
 file = "report.pdf"
 TOML
 
-zip report.pdf.slpc slipcase.metadata.toml report.pdf
+zip report.pdf.slpc slipcase.flyleaf.toml report.pdf
 ```
 
 That is a conformant container. `unzip` gets it back.
