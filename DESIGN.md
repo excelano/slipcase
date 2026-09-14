@@ -259,13 +259,15 @@ taken separately cost an implementation twice what one costs. Nothing else moves
 them, which is what SPEC Appendix C records, so a reader that handles 1.0 handles
 1.1 by learning two names and a version string.
 
-The flyleaf's name is fixed from 1.1 on because it is how a reader finds the
-version key. Renaming it is the one change SPEC §2.4's out-of-scope verdict
-cannot survive: a reader that does not know the new name never reads the
-declaration, and reports non-conformant where the rule says it should report
-nothing. The 1.0 to 1.1 pair shows it, which is why SPEC Appendix C says so and
-why the corpus carries a 1.0 container whose verdict only a reader knowing both
-names can reach.
+Renaming the flyleaf is the one change SPEC §2.4's out-of-scope verdict cannot
+survive, because the flyleaf is how a reader finds the version key: a reader
+that does not know the new name never reads the declaration, and reports
+non-conformant where the rule says it should report nothing. The 1.0 to 1.1
+pair shows it, and the corpus carries a 1.0 container whose verdict only a
+reader knowing both names can reach. SPEC Appendix C states what a rename costs
+rather than promising there will not be another, because §2.4 already declines
+to promise a program anything, and an appendix that did would be the one place
+the document broke its own rule.
 
 **Why conformance is relative to a version.** This specification can say whether a
 container declaring `1.0` conforms to it. It cannot say anything about one
