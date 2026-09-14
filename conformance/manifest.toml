@@ -1,6 +1,6 @@
 # Slipcase conformance corpus — manifest
 #
-# Test containers for Slipcase 1.0. See README.md in this directory for what the
+# Test containers for Slipcase 1.1. See README.md in this directory for what the
 # corpus is for, the verdict vocabulary, and what it cannot test.
 #
 # THIS FILE IS NOT NORMATIVE. Where a case and SPEC.md disagree, the specification
@@ -11,7 +11,7 @@
 # filename key when its subject is the container's name on disk.
 
 manifest_version = "0.2"
-spec_version = "1.0"
+spec_version = "1.1"
 toml_version = "1.1.0"
 
 # ---------------------------------------------------------------------------
@@ -22,7 +22,7 @@ toml_version = "1.1.0"
 id = "accept/minimal"
 section = "2.1"
 expect = "accept"
-note = "Metadata and payload, both stored uncompressed. The Appendix A container."
+note = "Flyleaf and content file, both stored uncompressed. The Appendix A container."
 
 [[case]]
 id = "accept/deflated"
@@ -31,10 +31,10 @@ expect = "accept"
 note = "Both members deflated. Compression method is unconstrained."
 
 [[case]]
-id = "accept/order-payload-first"
+id = "accept/order-content-file-first"
 section = "2.5"
 expect = "accept"
-note = "Payload precedes the metadata member. Member order is unconstrained."
+note = "Content file precedes the flyleaf. Member order is unconstrained."
 
 [[case]]
 id = "accept/extra-members-tool-artifacts"
@@ -49,10 +49,10 @@ expect = "accept"
 note = "An extra member named notes.txt. Additional members have no defined meaning and any name."
 
 [[case]]
-id = "accept/extra-member-resembling-payload"
+id = "accept/extra-member-resembling-content-file"
 section = "2.1"
 expect = "accept"
-note = "Extra member named report.pdf while payload.file names data.bin. Decoy for position- or convention-based lookup."
+note = "Extra member named report.pdf while content.file names data.bin. Decoy for position- or convention-based lookup."
 
 [[case]]
 id = "accept/archive-comment"
@@ -88,20 +88,26 @@ note = "MS-DOS zero timestamps on every member."
 id = "accept/encrypted-extra-member"
 section = "2.5"
 expect = "accept"
-note = "An additional member is ZIP-encrypted; metadata and payload are not."
+note = "An additional member is ZIP-encrypted; flyleaf and content file are not."
 
 [[case]]
-id = "accept/encrypted-payload"
+id = "accept/encrypted-content-file"
 section = "2.5"
 expect = "accept"
-note = "The payload member is encrypted, the metadata member is not. Conformance is establishable; only extraction needs the key. Contrast undetermined/encrypted-metadata-member."
+note = "The content file member is encrypted, the flyleaf is not. Conformance is establishable; only extraction needs the key. Contrast undetermined/encrypted-flyleaf."
+
+[[case]]
+id = "accept/version-1-0-names-as-extras"
+section = "2.1"
+expect = "accept"
+note = "A 1.1 container that also carries a member named slipcase.metadata.toml and a [payload] table, each naming decoy.pdf, which is not a member. Appendix C: under 1.1 the 1.0 names are an additional member and an additional key, and a reader that consults either finds a member that does not exist."
 
 [[case]]
 id = "accept/container-filename-not-convention"
 section = "4"
 expect = "accept"
-filename = "accept/payload-bundle.zip"
-note = "File named payload-bundle.zip. Appendix B is a convention; identification is by content."
+filename = "accept/report-bundle.zip"
+note = "File named report-bundle.zip. Appendix B is a convention; identification is by content."
 
 # ---------------------------------------------------------------------------
 # Accept — §2.1 member name decoding and matching
@@ -111,28 +117,28 @@ note = "File named payload-bundle.zip. Appendix B is a convention; identificatio
 id = "accept/name-utf8-bit11-set"
 section = "2.1"
 expect = "accept"
-note = "Payload named rapport-financiér.pdf, UTF-8 bytes, general purpose bit 11 set."
+note = "Content file named rapport-financiér.pdf, UTF-8 bytes, general purpose bit 11 set."
 
 [[case]]
 id = "accept/name-cp437-bit11-clear"
 section = "2.1"
 expect = "accept"
-note = "Payload named café.txt with é as CP437 0x82 and bit 11 clear. Decodes to the same string as payload.file."
+note = "Content file named café.txt with é as CP437 0x82 and bit 11 clear. Decodes to the same string as content.file."
 
 [[case]]
 id = "accept/name-cjk-utf8"
 section = "2.1"
 expect = "accept"
-note = "Payload named 報告書.pdf, bit 11 set."
+note = "Content file named 報告書.pdf, bit 11 set."
 
 [[case]]
 id = "accept/local-header-name-differs"
 section = "2.1"
 expect = "accept"
-note = "Central directory names the payload report.pdf; the same entry's local file header records decoy.pdf. payload.file = report.pdf. §2.1 makes the central directory authoritative, so this matches."
+note = "Central directory names the content file report.pdf; the same entry's local file header records decoy.pdf. content.file = report.pdf. §2.1 makes the central directory authoritative, so this matches."
 
 # ---------------------------------------------------------------------------
-# Accept — §2.2 metadata
+# Accept — §2.2 flyleaf
 # ---------------------------------------------------------------------------
 
 [[case]]
@@ -148,134 +154,134 @@ expect = "accept"
 note = "[provenance.system.source] three levels deep. Additional keys are permitted at any depth."
 
 [[case]]
-id = "accept/unknown-keys-in-payload-table"
+id = "accept/unknown-keys-in-content-table"
 section = "2.2"
 expect = "accept"
-note = "payload.size and payload.sha256 beside payload.file. The payload table is not closed."
+note = "content.size and content.sha256 beside content.file. The content file table is not closed."
 
 [[case]]
-id = "accept/metadata-key-order-reversed"
+id = "accept/flyleaf-key-order-reversed"
 section = "2.2"
 expect = "accept"
-note = "payload.file written before slipcase_version, using dotted keys. Root keys are order-independent; a bare key after a table header is not, which is why this cannot be written with a [payload] header."
+note = "content.file written before slipcase_version, using dotted keys. Root keys are order-independent; a bare key after a table header is not, which is why this cannot be written with a [content] header."
 
 [[case]]
-id = "accept/metadata-comments-and-blank-lines"
+id = "accept/flyleaf-comments-and-blank-lines"
 section = "2.2"
 expect = "accept"
 note = "Comments, blank lines, and indentation around the required keys."
 
 [[case]]
-id = "accept/metadata-crlf"
+id = "accept/flyleaf-crlf"
 section = "2.2"
 expect = "accept"
 note = "CRLF line endings. Permitted by TOML 1.1.0."
 
 [[case]]
-id = "accept/metadata-inline-table"
+id = "accept/flyleaf-inline-table"
 section = "2.2"
 expect = "accept"
-note = "payload written as an inline table on one line: payload = { file = \"report.pdf\" }."
+note = "content file written as an inline table on one line: content = { file = \"report.pdf\" }."
 
 [[case]]
-id = "accept/metadata-inline-table-multiline"
+id = "accept/flyleaf-inline-table-multiline"
 section = "2.2"
 expect = "accept"
 note = "Inline table spanning several lines with a trailing comma. Legal in TOML 1.1.0 and not in 1.0.0, so this case fails against a 1.0.0 parser and is what proves the version pin in §2.2."
 
 [[case]]
-id = "accept/metadata-dotted-key"
+id = "accept/flyleaf-dotted-key"
 section = "2.2"
 expect = "accept"
-note = "Written as payload.file = \"report.pdf\" with no table header. Same key path."
+note = "Written as content.file = \"report.pdf\" with no table header. Same key path."
 
 [[case]]
-id = "accept/metadata-bom"
+id = "accept/flyleaf-bom"
 section = "2.2"
 expect = "accept"
-note = "Metadata member begins with U+FEFF. §2.2 permits it and requires readers to skip it before parsing."
+note = "Flyleaf begins with U+FEFF. §2.2 permits it and requires readers to skip it before parsing."
 
 # ---------------------------------------------------------------------------
-# Accept — §2.3 payload
+# Accept — §2.3 content file
 # ---------------------------------------------------------------------------
 
 [[case]]
-id = "accept/payload-zero-bytes"
+id = "accept/content-file-zero-bytes"
 section = "2.3"
 expect = "accept"
-note = "Zero-length payload. Any length, including zero."
+note = "Zero-length content file. Any length, including zero."
 
 [[case]]
-id = "accept/payload-name-spaces"
+id = "accept/content-file-name-spaces"
 section = "2.3"
 expect = "accept"
 note = "Q3 report final.pdf. Spaces are not among the excluded characters."
 
 [[case]]
-id = "accept/payload-name-double-extension"
+id = "accept/content-file-name-double-extension"
 section = "2.3"
 expect = "accept"
 note = "archive.tar.gz."
 
 [[case]]
-id = "accept/payload-name-no-extension"
+id = "accept/content-file-name-no-extension"
 section = "2.3"
 expect = "accept"
 note = "README."
 
 [[case]]
-id = "accept/payload-name-leading-dot"
+id = "accept/content-file-name-leading-dot"
 section = "2.3"
 expect = "accept"
 note = ".hidden. A dotfile is not `.` and not `..`."
 
 [[case]]
-id = "accept/payload-name-dotdot-substring"
+id = "accept/content-file-name-dotdot-substring"
 section = "2.3"
 expect = "accept"
 note = "a..b. §2.3 excludes the names `.` and `..`, not the sequence wherever it occurs, and now says so explicitly."
 
 [[case]]
-id = "accept/payload-name-windows-reserved"
+id = "accept/content-file-name-windows-reserved"
 section = "2.3"
 expect = "accept"
 note = "file = CON. Legal under §2.3 and unwritable on Windows. The non-normative note in §2.3 covers the difference."
 
 [[case]]
-id = "accept/payload-name-trailing-dot"
+id = "accept/content-file-name-trailing-dot"
 section = "2.3"
 expect = "accept"
 note = "file = report. — a trailing dot. Legal here, silently stripped by Windows."
 
 [[case]]
-id = "accept/payload-nested-container"
+id = "accept/content-file-nested-container"
 section = "2.3"
 expect = "accept"
-note = "Payload is itself a conformant container. Requires no special handling."
+note = "Content file is itself a conformant container. Requires no special handling."
 
 [[case]]
-id = "accept/payload-name-bidi-override"
+id = "accept/content-file-name-bidi-override"
 section = "2.3"
 expect = "accept"
-note = "payload.file is report<U+202E>fdp.exe, a legal filename on every filesystem and conformant under §2.3, which excludes the C0 controls and nothing else. §3 requires that it be displayed escaped rather than applied; that is a requirement on programs and this file cannot test it. What this file tests is that a reader does not reject the name."
+note = "content.file is report<U+202E>fdp.exe, a legal filename on every filesystem and conformant under §2.3, which excludes the C0 controls and nothing else. §3 requires that it be displayed escaped rather than applied; that is a requirement on programs and this file cannot test it. What this file tests is that a reader does not reject the name."
 
 [[case]]
-id = "accept/payload-setuid-external-attributes"
+id = "accept/content-file-setuid-external-attributes"
 section = "2.5"
 expect = "accept"
-note = "Payload member records mode 04755 in its external attributes. §2.5 forbids rejecting a container over external attributes, and §3 forbids applying them when extracting. Both halves matter and only the first is testable here."
+note = "Content file member records mode 04755 in its external attributes. §2.5 forbids rejecting a container over external attributes, and §3 forbids applying them when extracting. Both halves matter and only the first is testable here."
 
 [[case]]
-id = "accept/payload-no-mode-recorded"
+id = "accept/content-file-no-mode-recorded"
 section = "2.5"
 expect = "accept"
 note = "Both members written by an MS-DOS creator, so the external attributes carry the DOS archive bit and no Unix mode. Conformant by §2.5, and the only container here that records no mode at all: every other accept case is written by a Unix tool and records 0644. What it exercises is what a reader reports rather than whether it accepts — a reader that asks a ZIP library for a mode is handed an invented 0664 and will describe a file nobody marked."
 
 [[case]]
-id = "accept/metadata-high-compression-ratio"
+id = "accept/flyleaf-high-compression-ratio"
 section = "2.2"
 expect = "accept"
-note = "Metadata member deflates about 900:1, from 64 KiB. Conformant, and small enough to sit under any bound §6 would lead an implementation to set. A reader that bounds the ratio rather than the size refuses this and is wrong; the bound §6 requires cannot itself be tested by a fixture, because it belongs to the implementation."
+note = "Flyleaf deflates about 900:1, from 64 KiB. Conformant, and small enough to sit under any bound §6 would lead an implementation to set. A reader that bounds the ratio rather than the size refuses this and is wrong; the bound §6 requires cannot itself be tested by a fixture, because it belongs to the implementation."
 
 # ---------------------------------------------------------------------------
 # Reject — §2.1 structure
@@ -288,22 +294,22 @@ expect = "reject"
 note = "Arbitrary bytes with a .slpc extension."
 
 [[case]]
-id = "reject/no-metadata-member"
+id = "reject/no-flyleaf"
 section = "2.1"
 expect = "reject"
 note = "A ZIP holding only report.pdf."
 
 [[case]]
-id = "reject/no-payload-member"
+id = "reject/no-content-file"
 section = "2.1"
 expect = "reject"
-note = "payload.file names report.pdf; no such member exists."
+note = "content.file names report.pdf; no such member exists."
 
 [[case]]
-id = "reject/metadata-in-subdirectory"
+id = "reject/flyleaf-in-subdirectory"
 section = "2.1"
 expect = "reject"
-note = "Only sub/slipcase.metadata.toml is present. The member name must equal slipcase.metadata.toml."
+note = "Only sub/slipcase.flyleaf.toml is present. The member name must equal slipcase.flyleaf.toml."
 
 [[case]]
 id = "reject/empty-archive"
@@ -312,28 +318,28 @@ expect = "reject"
 note = "A valid ZIP with no members."
 
 [[case]]
-id = "reject/duplicate-metadata-members"
+id = "reject/duplicate-flyleaves"
 section = "2.1"
 expect = "reject"
-note = "Two members named slipcase.metadata.toml with different content. §2.1 requires exactly one."
+note = "Two members named slipcase.flyleaf.toml with different content. §2.1 requires exactly one."
 
 [[case]]
-id = "reject/duplicate-metadata-members-agreeing"
+id = "reject/duplicate-flyleaves-agreeing"
 section = "2.1"
 expect = "reject"
-note = "Two byte-identical members named slipcase.metadata.toml. §2.1 requires exactly one. The case above disagrees about payload.file, so a last-wins reader rejects it on the absent payload and never counts anything; here the duplicates agree and nothing downstream can fail, so only enumerating the central directory detects it."
+note = "Two byte-identical members named slipcase.flyleaf.toml. §2.1 requires exactly one. The case above disagrees about content.file, so a last-wins reader rejects it on the absent content file and never counts anything; here the duplicates agree and nothing downstream can fail, so only enumerating the central directory detects it."
 
 [[case]]
-id = "reject/duplicate-payload-members"
+id = "reject/duplicate-content-files"
 section = "2.1"
 expect = "reject"
-note = "Two members whose names both equal payload.file. §2.1 requires exactly one."
+note = "Two members whose names both equal content.file. §2.1 requires exactly one."
 
 [[case]]
 id = "reject/eocd-counts-disagree"
 section = "2.1"
 expect = "reject"
-note = "The end of central directory record declares 3 entries on this disk and 2 in total. Every writer sets the two equal; read apart they decide how many members a reader sees, and the third here is a duplicate payload. Measured against the reference implementation on 2026-08-27: it read the total while its ZIP dependency read the count on this disk, so the duplicate was invisible to the check and the payload served was the one the count never covered."
+note = "The end of central directory record declares 3 entries on this disk and 2 in total. Every writer sets the two equal; read apart they decide how many members a reader sees, and the third here is a duplicate content file. Measured against the reference implementation on 2026-08-27: it read the total while its ZIP dependency read the count on this disk, so the duplicate was invisible to the check and the content file served was the one the count never covered."
 
 [[case]]
 id = "reject/eocd-not-at-end-of-file"
@@ -351,7 +357,7 @@ note = "The end of central directory record says this is disk 1 of a split archi
 id = "reject/zip64-gate-mismatch"
 section = "2.1"
 expect = "reject"
-note = "Only the directory-size field carries the Zip64 sentinel; the plain record is otherwise complete, consistent, and understates the count by one. Which record a reader believes depends on which fields it treats as the signal to look for a Zip64 one, and the member visible only to a reader that looks is a duplicate payload."
+note = "Only the directory-size field carries the Zip64 sentinel; the plain record is otherwise complete, consistent, and understates the count by one. Which record a reader believes depends on which fields it treats as the signal to look for a Zip64 one, and the member visible only to a reader that looks is a duplicate content file."
 
 [[case]]
 id = "reject/archive-preceded-by-data"
@@ -363,209 +369,209 @@ note = "A conformant container with 4 KB of self-extracting-style stub in front 
 id = "reject/two-archives-in-one-file"
 section = "2.1"
 expect = "reject"
-note = "Two whole containers concatenated, naming different payloads. A reader scanning backwards finds the second record, whose offsets land inside the first archive; one parsing forwards finds the first container. §2.1 refuses the file rather than choosing, for the reason it refuses duplicate member names rather than choosing."
+note = "Two whole containers concatenated, naming different content files. A reader scanning backwards finds the second record, whose offsets land inside the first archive; one parsing forwards finds the first container. §2.1 refuses the file rather than choosing, for the reason it refuses duplicate member names rather than choosing."
 
 # ---------------------------------------------------------------------------
 # Reject — §2.1 name matching
 # ---------------------------------------------------------------------------
 
 [[case]]
-id = "reject/metadata-name-case-mismatch"
+id = "reject/flyleaf-name-case-mismatch"
 section = "2.1"
 expect = "reject"
-note = "Member named SLIPCASE.METADATA.TOML. Comparison is case-sensitive, so there is no metadata member."
+note = "Member named SLIPCASE.FLYLEAF.TOML. Comparison is case-sensitive, so there is no flyleaf."
 
 [[case]]
-id = "reject/payload-name-case-mismatch"
+id = "reject/content-file-name-case-mismatch"
 section = "2.1"
 expect = "reject"
-note = "payload.file = Report.pdf against a member named report.pdf. Case-sensitive comparison, so nothing matches."
+note = "content.file = Report.pdf against a member named report.pdf. Case-sensitive comparison, so nothing matches."
 
 [[case]]
-id = "reject/payload-name-nfd-vs-nfc"
+id = "reject/content-file-name-nfd-vs-nfc"
 section = "2.1"
 expect = "reject"
-note = "Member named café.txt in NFD (e + U+0301) against payload.file in NFC (U+00E9). No normalization is applied, so the two do not match. The case macOS produces."
+note = "Member named café.txt in NFD (e + U+0301) against content.file in NFC (U+00E9). No normalization is applied, so the two do not match. The case macOS produces."
 
 [[case]]
 id = "reject/local-header-name-only-match"
 section = "2.1"
 expect = "reject"
-note = "Central directory names the entry decoy.pdf; its local file header records report.pdf, which is what payload.file names. The central directory is authoritative, so no member matches."
+note = "Central directory names the entry decoy.pdf; its local file header records report.pdf, which is what content.file names. The central directory is authoritative, so no member matches."
 
 # ---------------------------------------------------------------------------
-# Reject — §2.2 metadata
+# Reject — §2.2 flyleaf
 # ---------------------------------------------------------------------------
 
 [[case]]
-id = "reject/metadata-invalid-toml"
+id = "reject/flyleaf-invalid-toml"
 section = "2.2"
 expect = "reject"
 note = "Unterminated string. Not a valid TOML 1.1.0 document."
 
 [[case]]
-id = "reject/metadata-not-utf8"
+id = "reject/flyleaf-not-utf8"
 section = "2.2"
 expect = "reject"
 note = "Latin-1 bytes in a value. TOML 1.1.0 requires UTF-8."
 
 [[case]]
-id = "reject/metadata-empty"
+id = "reject/flyleaf-empty"
 section = "2.2"
 expect = "reject"
-note = "Zero-length metadata member. Valid TOML, but neither required key is present."
+note = "Zero-length flyleaf. Valid TOML, but neither required key is present."
 
 [[case]]
 id = "reject/missing-slipcase-version"
 section = "2.2"
 expect = "reject"
-note = "payload.file present, slipcase_version absent."
+note = "content.file present, slipcase_version absent."
 
 [[case]]
-id = "reject/missing-payload-file"
+id = "reject/missing-content-file-key"
 section = "2.2"
 expect = "reject"
-note = "[payload] table present but empty."
+note = "[content] table present but empty."
 
 [[case]]
-id = "reject/missing-payload-table"
+id = "reject/missing-content-table"
 section = "2.2"
 expect = "reject"
-note = "No payload table at all."
+note = "No content file table at all."
 
 [[case]]
 id = "reject/version-not-string"
 section = "2.2"
 expect = "reject"
-note = "slipcase_version = 1.0 as a TOML float. §2.2 types it as a string."
+note = "slipcase_version = 1.1 as a TOML float. §2.2 types it as a string."
 
 [[case]]
-id = "reject/payload-file-not-string"
+id = "reject/content-file-not-string"
 section = "2.2"
 expect = "reject"
 note = "file = 42. §2.2 types it as a string."
 
 [[case]]
-id = "reject/version-inside-payload-table"
+id = "reject/version-inside-content-table"
 section = "2.2"
 expect = "reject"
-note = "slipcase_version written after a [payload] table header, so it parses as payload.slipcase_version and the document has no root slipcase_version. A realistic mistake: appending a key to a file that ends in a table. An earlier revision of this corpus had the same container marked accept."
+note = "slipcase_version written after a [content] table header, so it parses as content.slipcase_version and the document has no root slipcase_version. A realistic mistake: appending a key to a file that ends in a table. An earlier revision of this corpus had the same container marked accept."
 
 [[case]]
-id = "reject/payload-not-a-table"
+id = "reject/content-not-a-table"
 section = "2.2"
 expect = "reject"
-note = "payload = \"report.pdf\" as a string, so the key path payload.file does not resolve."
+note = "content = \"report.pdf\" as a string, so the key path content.file does not resolve."
 
 # ---------------------------------------------------------------------------
-# Reject — §2.3 payload.file
+# Reject — §2.3 content.file
 # ---------------------------------------------------------------------------
 # Each carries a member actually matching the stated name where ZIP allows it,
 # so the only violation is §2.3 itself.
 
 [[case]]
-id = "reject/payload-file-empty"
+id = "reject/content-file-empty"
 section = "2.3"
 expect = "reject"
 note = "file = \"\"."
 
 [[case]]
-id = "reject/payload-file-dot"
+id = "reject/content-file-dot"
 section = "2.3"
 expect = "reject"
 note = "file = \".\"."
 
 [[case]]
-id = "reject/payload-file-dotdot"
+id = "reject/content-file-dotdot"
 section = "2.3"
 expect = "reject"
 note = "file = \"..\"."
 
 [[case]]
-id = "reject/payload-file-forward-slash"
+id = "reject/content-file-forward-slash"
 section = "2.3"
 expect = "reject"
 note = "file = \"sub/report.pdf\", with a member of that name present."
 
 [[case]]
-id = "reject/payload-file-backslash"
+id = "reject/content-file-backslash"
 section = "2.3"
 expect = "reject"
 note = "file = \"sub\\\\report.pdf\", with a member of that name present."
 
 [[case]]
-id = "reject/payload-file-traversal"
+id = "reject/content-file-traversal"
 section = "2.3"
 expect = "reject"
 note = "file = \"../../etc/passwd\". Violates both the slash and the dotdot rules."
 
 [[case]]
-id = "reject/payload-file-colon-drive"
+id = "reject/content-file-colon-drive"
 section = "2.3"
 expect = "reject"
 note = "file = \"C:report.pdf\"."
 
 [[case]]
-id = "reject/payload-file-colon-plain"
+id = "reject/content-file-colon-plain"
 section = "2.3"
 expect = "reject"
 note = "file = \"notes:draft.txt\". The colon rule is unconditional, not limited to drive letters."
 
 [[case]]
-id = "reject/payload-file-nul"
+id = "reject/content-file-nul"
 section = "2.3"
 expect = "reject"
 note = "file = \"rep\\u0000ort.pdf\". U+0000 is in the excluded control range."
 
 [[case]]
-id = "reject/payload-file-newline"
+id = "reject/content-file-newline"
 section = "2.3"
 expect = "reject"
 note = "file = \"report\\npdf\". U+000A is in the excluded control range."
 
 [[case]]
-id = "reject/payload-file-del"
+id = "reject/content-file-del"
 section = "2.3"
 expect = "reject"
 note = "file = \"report\\u007Fpdf\". U+007F is excluded by name."
 
 [[case]]
-id = "reject/payload-file-equals-metadata"
+id = "reject/content-file-equals-flyleaf"
 section = "2.3"
 expect = "reject"
-note = "file = \"slipcase.metadata.toml\"."
+note = "file = \"slipcase.flyleaf.toml\"."
 
 # ---------------------------------------------------------------------------
-# Reject — §2.3 payload entry type
+# Reject — §2.3 content file entry type
 # ---------------------------------------------------------------------------
 
 [[case]]
-id = "reject/payload-symlink"
+id = "reject/content-file-symlink"
 section = "2.3"
 expect = "reject"
-note = "Payload member carries Unix symlink external attributes; its content is a target path. Not a regular file entry."
+note = "Content file member carries Unix symlink external attributes; its content is a target path. Not a regular file entry."
 
 [[case]]
-id = "reject/payload-directory-entry"
+id = "reject/content-file-directory-entry"
 section = "2.3"
 expect = "reject"
-note = "Member matching payload.file carries directory external attributes and zero length. Not a regular file entry. Named without a trailing slash, since a name containing / is excluded by §2.3 anyway."
+note = "Member matching content.file carries directory external attributes and zero length. Not a regular file entry. Named without a trailing slash, since a name containing / is excluded by §2.3 anyway."
 
 [[case]]
-id = "reject/payload-fifo-entry"
+id = "reject/content-file-fifo-entry"
 section = "2.3"
 expect = "reject"
-note = "Payload member carries Unix FIFO mode bits in its external attributes. Not a regular file entry."
+note = "Content file member carries Unix FIFO mode bits in its external attributes. Not a regular file entry."
 
 # ---------------------------------------------------------------------------
 # Undetermined — §2.2
 # ---------------------------------------------------------------------------
 
 [[case]]
-id = "undetermined/encrypted-metadata-member"
+id = "undetermined/encrypted-flyleaf"
 section = "2.2"
 expect = "undetermined"
-note = "The metadata member is ZIP-encrypted and the key is not supplied. §2.5 forbids rejecting on the grounds of encryption; §2.2 requires the member to parse as TOML once decrypted. Conformance cannot be established, so an implementation must report neither verdict. Contrast accept/encrypted-payload."
+note = "The flyleaf is ZIP-encrypted and the key is not supplied. §2.5 forbids rejecting on the grounds of encryption; §2.2 requires the member to parse as TOML once decrypted. Conformance cannot be established, so an implementation must report neither verdict. Contrast accept/encrypted-content-file."
 
 # ---------------------------------------------------------------------------
 # Out of scope — §2.4
@@ -575,7 +581,7 @@ note = "The metadata member is ZIP-encrypted and the key is not supplied. §2.5 
 id = "out-of-scope/version-2-0"
 section = "2.4"
 expect = "out-of-scope"
-note = "slipcase_version = \"2.0\" in an otherwise well-formed container. Conformance is relative to a version; this corpus tests 1.0 and says nothing about 2.0. Not a failure. §3 requires that an implementation not report it as conformant to a version it does recognize, which makes this case checkable rather than a proxy."
+note = "slipcase_version = \"2.0\" in an otherwise well-formed container. Conformance is relative to a version; this corpus tests 1.1 and says nothing about 2.0. Not a failure. §3 requires that an implementation not report it as conformant to a version it does recognize, which makes this case checkable rather than a proxy."
 
 [[case]]
 id = "out-of-scope/version-malformed"
@@ -587,4 +593,10 @@ note = "slipcase_version = \"banana\". §2.2 constrains the value's type and not
 id = "out-of-scope/version-empty-string"
 section = "2.4"
 expect = "out-of-scope"
-note = "slipcase_version = \"\". A string, so §2.2 is satisfied; not \"1.0\", so §2.4 puts it outside the question."
+note = "slipcase_version = \"\". A string, so §2.2 is satisfied; not \"1.1\", so §2.4 puts it outside the question."
+
+[[case]]
+id = "out-of-scope/version-1-0"
+section = "2.4"
+expect = "out-of-scope"
+note = "A conformant 1.0 container: slipcase.metadata.toml carrying payload.file, declaring 1.0. Outside this version's question by §2.4. Reaching that verdict takes knowing 1.0's flyleaf name, since a reader that knows only 1.1's finds no flyleaf and never reads the declaration. Appendix C records this."

@@ -30,8 +30,9 @@ import zlib
 HERE = pathlib.Path(__file__).parent
 MANIFEST = HERE / "manifest.toml"
 
-META_NAME = "slipcase.metadata.toml"
-PAYLOAD = b"%PDF-1.4\n% slipcase conformance corpus payload\n"
+FLYLEAF_NAME = "slipcase.flyleaf.toml"
+FLYLEAF_NAME_1_0 = "slipcase.metadata.toml"
+CONTENT = b"%PDF-1.4\n% slipcase conformance corpus content file\n"
 
 # A fixed MS-DOS timestamp: 2026-08-20 12:00:00. Reproducibility over realism.
 DOS_TIME = (12 << 11) | (0 << 5) | 0
@@ -280,7 +281,7 @@ def build_zip(entries: list[Entry], *, comment: bytes = b"", zip64: bool = False
 
 
 # --------------------------------------------------------------------------
-# Metadata and container helpers
+# Flyleaf and container helpers
 # --------------------------------------------------------------------------
 
 
@@ -299,53 +300,63 @@ def toml_escape(value: str) -> str:
     return "".join(out)
 
 
-def meta_toml(payload_file: str = "report.pdf", version: str = "1.0", *, body: str = "") -> bytes:
+def flyleaf_toml(content_file: str = "report.pdf", version: str = "1.1", *, body: str = "") -> bytes:
     return (
         f'slipcase_version = "{toml_escape(version)}"\n'
         f"\n"
-        f"[payload]\n"
-        f'file = "{toml_escape(payload_file)}"\n'
+        f"[content]\n"
+        f'file = "{toml_escape(content_file)}"\n'
         f"{body}"
     ).encode("utf-8")
 
 
+def flyleaf_toml_1_0(content_file: str = "report.pdf") -> bytes:
+    """A version 1.0 flyleaf: the key that version used, declaring that version."""
+    return (
+        'slipcase_version = "1.0"\n'
+        "\n"
+        "[payload]\n"
+        f'file = "{toml_escape(content_file)}"\n'
+    ).encode("utf-8")
+
+
 def container(
-    payload_file: str = "report.pdf",
+    content_file: str = "report.pdf",
     member_name: str | bytes | None = None,
     *,
-    version: str = "1.0",
-    metadata: bytes | None = None,
-    payload: bytes = PAYLOAD,
+    version: str = "1.1",
+    flyleaf: bytes | None = None,
+    content: bytes = CONTENT,
     method: int = STORED,
-    payload_first: bool = False,
+    content_first: bool = False,
     extras: tuple[Entry, ...] = (),
-    payload_mode: int = MODE_REGULAR,
-    payload_flags: int = 0,
-    payload_local_name: str | bytes | None = None,
-    meta_flags: int = 0,
-    encrypt_metadata: bool = False,
-    encrypt_payload: bool = False,
+    content_mode: int = MODE_REGULAR,
+    content_flags: int = 0,
+    content_local_name: str | bytes | None = None,
+    flyleaf_flags: int = 0,
+    encrypt_flyleaf: bool = False,
+    encrypt_content: bool = False,
     **zip_options,
 ) -> bytes:
-    """The shape almost every case starts from: one metadata member, one payload."""
+    """The shape almost every case starts from: one flyleaf, one content file."""
     if member_name is None:
-        member_name = payload_file
-    if metadata is None:
-        metadata = meta_toml(payload_file, version)
+        member_name = content_file
+    if flyleaf is None:
+        flyleaf = flyleaf_toml(content_file, version)
 
-    meta_entry = Entry(
-        META_NAME, metadata, method=method, flags=meta_flags, encrypt=encrypt_metadata
+    flyleaf_entry = Entry(
+        FLYLEAF_NAME, flyleaf, method=method, flags=flyleaf_flags, encrypt=encrypt_flyleaf
     )
-    payload_entry = Entry(
+    content_entry = Entry(
         member_name,
-        payload,
+        content,
         method=method,
-        flags=payload_flags,
-        mode=payload_mode,
-        local_name=payload_local_name,
-        encrypt=encrypt_payload,
+        flags=content_flags,
+        mode=content_mode,
+        local_name=content_local_name,
+        encrypt=encrypt_content,
     )
-    members = [payload_entry, meta_entry] if payload_first else [meta_entry, payload_entry]
+    members = [content_entry, flyleaf_entry] if content_first else [flyleaf_entry, content_entry]
     return build_zip(members + list(extras), **zip_options)
 
 
@@ -366,7 +377,7 @@ def case(case_id: str):
 
 case("accept/minimal")(lambda: container())
 case("accept/deflated")(lambda: container(method=DEFLATED))
-case("accept/order-payload-first")(lambda: container(payload_first=True))
+case("accept/order-content-file-first")(lambda: container(content_first=True))
 case("accept/archive-comment")(lambda: container(comment=b"built by generate.py"))
 case("accept/zip64")(lambda: container(zip64=True))
 case("accept/timestamps-epoch")(lambda: _epoch())
@@ -374,9 +385,9 @@ case("accept/container-filename-not-convention")(lambda: container())
 
 
 def _epoch() -> bytes:
-    meta = Entry(META_NAME, meta_toml(), dos_time=0, dos_date=0)
-    payload = Entry("report.pdf", PAYLOAD, dos_time=0, dos_date=0)
-    return build_zip([meta, payload])
+    flyleaf = Entry(FLYLEAF_NAME, flyleaf_toml(), dos_time=0, dos_date=0)
+    content = Entry("report.pdf", CONTENT, dos_time=0, dos_date=0)
+    return build_zip([flyleaf, content])
 
 
 @case("accept/extra-members-tool-artifacts")
@@ -395,15 +406,15 @@ def _() -> bytes:
     return container(extras=(Entry("notes.txt", b"an unrelated member\n"),))
 
 
-@case("accept/extra-member-resembling-payload")
+@case("accept/extra-member-resembling-content-file")
 def _() -> bytes:
-    decoy = Entry("report.pdf", b"the decoy, not the payload\n")
+    decoy = Entry("report.pdf", b"the decoy, not the content file\n")
     return container("data.bin", extras=(decoy,))
 
 
 @case("accept/data-descriptors")
 def _() -> bytes:
-    return container(payload_flags=FLAG_DATA_DESCRIPTOR, meta_flags=FLAG_DATA_DESCRIPTOR)
+    return container(content_flags=FLAG_DATA_DESCRIPTOR, flyleaf_flags=FLAG_DATA_DESCRIPTOR)
 
 
 @case("accept/extra-fields")
@@ -412,9 +423,9 @@ def _() -> bytes:
     timestamp = struct.pack("<HHBi", 0x5455, 5, 0x01, 1_776_000_000)
     unix_ids = struct.pack("<HHBBIBI", 0x7875, 11, 1, 4, 1000, 4, 1000)
     extra = timestamp + unix_ids
-    meta = Entry(META_NAME, meta_toml(), extra=extra)
-    payload = Entry("report.pdf", PAYLOAD, extra=extra)
-    return build_zip([meta, payload])
+    flyleaf = Entry(FLYLEAF_NAME, flyleaf_toml(), extra=extra)
+    content = Entry("report.pdf", CONTENT, extra=extra)
+    return build_zip([flyleaf, content])
 
 
 @case("accept/encrypted-extra-member")
@@ -423,7 +434,22 @@ def _() -> bytes:
     return container(extras=(secret,))
 
 
-case("accept/encrypted-payload")(lambda: container(encrypt_payload=True))
+case("accept/encrypted-content-file")(lambda: container(encrypt_content=True))
+
+
+@case("accept/version-1-0-names-as-extras")
+def _() -> bytes:
+    """A 1.1 container that also carries both of 1.0's names.
+
+    An extra member named slipcase.metadata.toml and a [payload] table in the
+    flyleaf, each naming decoy.pdf, which is not a member. SPEC Appendix C says
+    the 1.0 names carry no meaning here: one is an additional member and the
+    other an additional key. A reader that consults either finds a member that
+    does not exist.
+    """
+    body = '\n[payload]\nfile = "decoy.pdf"\n'
+    legacy = Entry(FLYLEAF_NAME_1_0, flyleaf_toml_1_0("decoy.pdf"))
+    return container(flyleaf=flyleaf_toml(body=body), extras=(legacy,))
 
 
 # --------------------------------------------------------------------------
@@ -443,110 +469,110 @@ def _() -> bytes:
 
 @case("accept/local-header-name-differs")
 def _() -> bytes:
-    # The central directory is authoritative, so this still matches payload.file.
-    return container("report.pdf", payload_local_name="decoy.pdf")
+    # The central directory is authoritative, so this still matches content.file.
+    return container("report.pdf", content_local_name="decoy.pdf")
 
 
 # --------------------------------------------------------------------------
-# Accept — metadata
+# Accept — flyleaf
 # --------------------------------------------------------------------------
 
 
 @case("accept/unknown-top-level-keys")
 def _() -> bytes:
     text = (
-        'slipcase_version = "1.0"\n'
+        'slipcase_version = "1.1"\n'
         'title = "Q3 report"\n'
         'author = "D. Anderson"\n'
         'retention_class = "7y"\n\n'
-        '[payload]\nfile = "report.pdf"\n'
+        '[content]\nfile = "report.pdf"\n'
     )
-    return container(metadata=text.encode())
+    return container(flyleaf=text.encode())
 
 
 @case("accept/unknown-nested-tables")
 def _() -> bytes:
     body = '\n[provenance.system.source]\nname = "docmgmt"\nid = 4821\n'
-    return container(metadata=meta_toml(body=body))
+    return container(flyleaf=flyleaf_toml(body=body))
 
 
-@case("accept/unknown-keys-in-payload-table")
+@case("accept/unknown-keys-in-content-table")
 def _() -> bytes:
     body = 'size = 44\nsha256 = "e3b0c44298fc1c149afbf4c8996fb924"\n'
-    return container(metadata=meta_toml(body=body))
+    return container(flyleaf=flyleaf_toml(body=body))
 
 
-@case("accept/metadata-key-order-reversed")
+@case("accept/flyleaf-key-order-reversed")
 def _() -> bytes:
-    # Dotted keys, not a table header: a bare key following [payload] would belong
-    # to that table, which is what reject/version-inside-payload-table tests.
-    text = 'payload.file = "report.pdf"\nslipcase_version = "1.0"\n'
-    return container(metadata=text.encode())
+    # Dotted keys, not a table header: a bare key following [content] would belong
+    # to that table, which is what reject/version-inside-content-table tests.
+    text = 'content.file = "report.pdf"\nslipcase_version = "1.1"\n'
+    return container(flyleaf=text.encode())
 
 
-@case("accept/metadata-comments-and-blank-lines")
+@case("accept/flyleaf-comments-and-blank-lines")
 def _() -> bytes:
     text = (
-        "# slipcase metadata\n\n"
-        '  slipcase_version = "1.0"   # the specification version\n\n\n'
-        "[payload]\n"
+        "# slipcase flyleaf\n\n"
+        '  slipcase_version = "1.1"   # the specification version\n\n\n'
+        "[content]\n"
         "  # the member this describes\n"
         '  file = "report.pdf"\n'
     )
-    return container(metadata=text.encode())
+    return container(flyleaf=text.encode())
 
 
-@case("accept/metadata-crlf")
+@case("accept/flyleaf-crlf")
 def _() -> bytes:
-    return container(metadata=meta_toml().replace(b"\n", b"\r\n"))
+    return container(flyleaf=flyleaf_toml().replace(b"\n", b"\r\n"))
 
 
-@case("accept/metadata-inline-table")
+@case("accept/flyleaf-inline-table")
 def _() -> bytes:
-    text = 'slipcase_version = "1.0"\npayload = { file = "report.pdf" }\n'
-    return container(metadata=text.encode())
+    text = 'slipcase_version = "1.1"\ncontent = { file = "report.pdf" }\n'
+    return container(flyleaf=text.encode())
 
 
-@case("accept/metadata-inline-table-multiline")
+@case("accept/flyleaf-inline-table-multiline")
 def _() -> bytes:
     # Newlines and a trailing comma inside an inline table: TOML 1.1.0, not 1.0.0.
-    text = 'slipcase_version = "1.0"\n\npayload = {\n    file = "report.pdf",\n}\n'
-    return container(metadata=text.encode())
+    text = 'slipcase_version = "1.1"\n\ncontent = {\n    file = "report.pdf",\n}\n'
+    return container(flyleaf=text.encode())
 
 
-@case("accept/metadata-dotted-key")
+@case("accept/flyleaf-dotted-key")
 def _() -> bytes:
-    text = 'slipcase_version = "1.0"\npayload.file = "report.pdf"\n'
-    return container(metadata=text.encode())
+    text = 'slipcase_version = "1.1"\ncontent.file = "report.pdf"\n'
+    return container(flyleaf=text.encode())
 
 
-case("accept/metadata-bom")(lambda: container(metadata=b"\xef\xbb\xbf" + meta_toml()))
+case("accept/flyleaf-bom")(lambda: container(flyleaf=b"\xef\xbb\xbf" + flyleaf_toml()))
 
 
 # --------------------------------------------------------------------------
-# Accept — payload
+# Accept — content file
 # --------------------------------------------------------------------------
 
-case("accept/payload-zero-bytes")(lambda: container(payload=b""))
-case("accept/payload-name-spaces")(lambda: container("Q3 report final.pdf"))
-case("accept/payload-name-double-extension")(lambda: container("archive.tar.gz"))
-case("accept/payload-name-no-extension")(lambda: container("README"))
-case("accept/payload-name-leading-dot")(lambda: container(".hidden"))
-case("accept/payload-name-dotdot-substring")(lambda: container("a..b"))
-case("accept/payload-name-windows-reserved")(lambda: container("CON"))
-case("accept/payload-name-trailing-dot")(lambda: container("report."))
-case("accept/payload-nested-container")(
-    lambda: container("inner.pdf.slpc", payload=container("inner.pdf"))
+case("accept/content-file-zero-bytes")(lambda: container(content=b""))
+case("accept/content-file-name-spaces")(lambda: container("Q3 report final.pdf"))
+case("accept/content-file-name-double-extension")(lambda: container("archive.tar.gz"))
+case("accept/content-file-name-no-extension")(lambda: container("README"))
+case("accept/content-file-name-leading-dot")(lambda: container(".hidden"))
+case("accept/content-file-name-dotdot-substring")(lambda: container("a..b"))
+case("accept/content-file-name-windows-reserved")(lambda: container("CON"))
+case("accept/content-file-name-trailing-dot")(lambda: container("report."))
+case("accept/content-file-nested-container")(
+    lambda: container("inner.pdf.slpc", content=container("inner.pdf"))
 )
-case("accept/payload-name-bidi-override")(
+case("accept/content-file-name-bidi-override")(
     lambda: container("report\u202Efdp.exe")
 )
-case("accept/payload-setuid-external-attributes")(
-    lambda: container(payload_mode=MODE_SETUID_REGULAR)
+case("accept/content-file-setuid-external-attributes")(
+    lambda: container(content_mode=MODE_SETUID_REGULAR)
 )
 
 
-@case("accept/payload-no-mode-recorded")
+@case("accept/content-file-no-mode-recorded")
 def _() -> bytes:
     """A conformant container written by an MS-DOS tool, so no member records a
     Unix mode.
@@ -560,7 +586,7 @@ def _() -> bytes:
     That is not hypothetical. A ZIP library's `unix_mode()` invents a mode for a
     DOS entry rather than returning nothing, so a reader that asks the library
     rather than reading the external attributes reports a mode that was never
-    recorded — and an application that shows *this payload is executable* off
+    recorded — and an application that shows *this content file is executable* off
     the back of it says so about a file nobody marked. `excelano/slipcase-desktop`
     hit exactly that and reads the attributes directly because of it; its own
     walkthrough then found it had no fixture to check the fix against, and made
@@ -576,15 +602,15 @@ def _() -> bytes:
     dos = {"made_by": 0x0014, "external": 0x20}
     return build_zip(
         [
-            Entry(META_NAME, meta_toml("report.pdf", "1.0"), **dos),
-            Entry("report.pdf", PAYLOAD, **dos),
+            Entry(FLYLEAF_NAME, flyleaf_toml("report.pdf", "1.1"), **dos),
+            Entry("report.pdf", CONTENT, **dos),
         ]
     )
 
 
-@case("accept/metadata-high-compression-ratio")
+@case("accept/flyleaf-high-compression-ratio")
 def _() -> bytes:
-    """A conformant container whose metadata member inflates about 900 times.
+    """A conformant container whose flyleaf inflates about 900 times.
 
     Deliberately small in absolute terms — 64 KiB — so that it sits under any
     bound SPEC 6 would lead an implementation to choose. It was a quarter of a
@@ -599,7 +625,7 @@ def _() -> bytes:
     to the implementation and no verdict here can depend on it.
     """
     filler = "# " + "0" * (64 * 1024) + "\n"
-    return container(metadata=meta_toml(body=filler), method=DEFLATED)
+    return container(flyleaf=flyleaf_toml(body=filler), method=DEFLATED)
 
 
 # --------------------------------------------------------------------------
@@ -607,65 +633,65 @@ def _() -> bytes:
 # --------------------------------------------------------------------------
 
 case("reject/not-a-zip")(lambda: b"This is not an archive. It is a sentence.\n")
-case("reject/no-metadata-member")(lambda: build_zip([Entry("report.pdf", PAYLOAD)]))
+case("reject/no-flyleaf")(lambda: build_zip([Entry("report.pdf", CONTENT)]))
 case("reject/empty-archive")(lambda: build_zip([]))
 
 
-@case("reject/no-payload-member")
+@case("reject/no-content-file")
 def _() -> bytes:
-    return build_zip([Entry(META_NAME, meta_toml())])
+    return build_zip([Entry(FLYLEAF_NAME, flyleaf_toml())])
 
 
-@case("reject/metadata-in-subdirectory")
+@case("reject/flyleaf-in-subdirectory")
 def _() -> bytes:
     members = [
-        Entry(f"sub/{META_NAME}", meta_toml()),
-        Entry("report.pdf", PAYLOAD),
+        Entry(f"sub/{FLYLEAF_NAME}", flyleaf_toml()),
+        Entry("report.pdf", CONTENT),
     ]
     return build_zip(members)
 
 
-@case("reject/duplicate-metadata-members")
+@case("reject/duplicate-flyleaves")
 def _() -> bytes:
     members = [
-        Entry(META_NAME, meta_toml()),
-        Entry(META_NAME, meta_toml("other.pdf")),
-        Entry("report.pdf", PAYLOAD),
+        Entry(FLYLEAF_NAME, flyleaf_toml()),
+        Entry(FLYLEAF_NAME, flyleaf_toml("other.pdf")),
+        Entry("report.pdf", CONTENT),
     ]
     return build_zip(members)
 
 
-@case("reject/duplicate-metadata-members-agreeing")
+@case("reject/duplicate-flyleaves-agreeing")
 def _() -> bytes:
-    """Two byte-identical members named slipcase.metadata.toml.
+    """Two byte-identical members named slipcase.flyleaf.toml.
 
-    The sibling above disagrees about payload.file, so a reader taking the last
-    duplicate rejects it for naming an absent payload and a reader taking the
+    The sibling above disagrees about content.file, so a reader taking the last
+    duplicate rejects it for naming an absent content file and a reader taking the
     first accepts it — the verdict follows whichever duplicate the library
     happened to return, and a last-wins reader is credited with a check it never
     ran. Here the two agree, so nothing downstream can fail and only counting
     the entries detects anything.
     """
     members = [
-        Entry(META_NAME, meta_toml()),
-        Entry(META_NAME, meta_toml()),
-        Entry("report.pdf", PAYLOAD),
+        Entry(FLYLEAF_NAME, flyleaf_toml()),
+        Entry(FLYLEAF_NAME, flyleaf_toml()),
+        Entry("report.pdf", CONTENT),
     ]
     return build_zip(members)
 
 
-@case("reject/duplicate-payload-members")
+@case("reject/duplicate-content-files")
 def _() -> bytes:
     members = [
-        Entry(META_NAME, meta_toml()),
-        Entry("report.pdf", PAYLOAD),
+        Entry(FLYLEAF_NAME, flyleaf_toml()),
+        Entry("report.pdf", CONTENT),
         Entry("report.pdf", b"a second member with the same name\n"),
     ]
     return build_zip(members)
 
 
-def _duplicate_payload_zip(**zip_options) -> bytearray:
-    """Three central directory entries, the last a duplicate payload.
+def _duplicate_content_file_zip(**zip_options) -> bytearray:
+    """Three central directory entries, the last a duplicate content file.
 
     The shape every case below hides from one parser or the other: whether a
     reader sees the third entry is the whole question.
@@ -673,8 +699,8 @@ def _duplicate_payload_zip(**zip_options) -> bytearray:
     return bytearray(
         build_zip(
             [
-                Entry(META_NAME, meta_toml()),
-                Entry("report.pdf", PAYLOAD),
+                Entry(FLYLEAF_NAME, flyleaf_toml()),
+                Entry("report.pdf", CONTENT),
                 Entry("report.pdf", b"a second member with the same name\n"),
             ],
             **zip_options,
@@ -690,10 +716,10 @@ def _() -> bytes:
     writer sets them equal; read apart they choose how many members a reader
     sees. Measured 2026-08-27 against the reference implementation, which read
     the total while its ZIP dependency read the count on this disk: declaring 3
-    and 2 hid a duplicate payload behind a conformant verdict, and the payload
+    and 2 hid a duplicate content file behind a conformant verdict, and the content file
     served was the one the count never covered.
     """
-    data = _duplicate_payload_zip()
+    data = _duplicate_content_file_zip()
     at = data.rfind(b"PK\x05\x06")
     struct.pack_into("<H", data, at + 10, 2)
     return bytes(data)
@@ -718,7 +744,7 @@ def _() -> bytes:
     so the corpus agreed with itself whether or not a reader checked anything.
     Measured 2026-08-27.
     """
-    full = _duplicate_payload_zip()
+    full = _duplicate_content_file_zip()
     at = full.rfind(b"PK\x05\x06")
     cd_start = struct.unpack_from("<I", full, at + 16)[0]
 
@@ -759,7 +785,7 @@ def _() -> bytes:
     The three other fields §2.1 pins got cases when the rule was written; this
     one did not, which is why it is here.
     """
-    data = _duplicate_payload_zip()
+    data = _duplicate_content_file_zip()
     at = data.rfind(b"PK\x05\x06")
     struct.pack_into("<H", data, at + 4, 1)
     return bytes(data)
@@ -775,7 +801,7 @@ def _() -> bytes:
     beside it holds the truth, and the third member is visible only to a reader
     that goes and looks.
     """
-    data = _duplicate_payload_zip(zip64=True)
+    data = _duplicate_content_file_zip(zip64=True)
     z64 = data.find(struct.pack("<I", SIG_ZIP64_EOCD))
     real_offset = struct.unpack_from("<Q", data, z64 + 48)[0]
     at = data.rfind(b"PK\x05\x06")
@@ -800,7 +826,7 @@ def _() -> bytes:
 
 @case("reject/two-archives-in-one-file")
 def _() -> bytes:
-    """Two whole containers, one after the other, naming different payloads.
+    """Two whole containers, one after the other, naming different content files.
 
     A reader scanning backwards finds the second archive's record, whose offsets
     are relative to where that archive begins and so land inside the first. A
@@ -816,108 +842,119 @@ def _() -> bytes:
 # --------------------------------------------------------------------------
 
 
-@case("reject/metadata-name-case-mismatch")
+@case("reject/flyleaf-name-case-mismatch")
 def _() -> bytes:
     members = [
-        Entry("SLIPCASE.METADATA.TOML", meta_toml()),
-        Entry("report.pdf", PAYLOAD),
+        Entry("SLIPCASE.FLYLEAF.TOML", flyleaf_toml()),
+        Entry("report.pdf", CONTENT),
     ]
     return build_zip(members)
 
 
-case("reject/payload-name-case-mismatch")(lambda: container("Report.pdf", "report.pdf"))
+case("reject/content-file-name-case-mismatch")(lambda: container("Report.pdf", "report.pdf"))
 
 
-@case("reject/payload-name-nfd-vs-nfc")
+@case("reject/content-file-name-nfd-vs-nfc")
 def _() -> bytes:
-    # payload.file carries U+00E9; the member name carries e + U+0301.
+    # content.file carries U+00E9; the member name carries e + U+0301.
     return container("caf\u00e9.txt", "cafe\u0301.txt")
 
 
 @case("reject/local-header-name-only-match")
 def _() -> bytes:
     # Only the local header says report.pdf, and the local header does not decide.
-    return container("report.pdf", "decoy.pdf", payload_local_name="report.pdf")
+    return container("report.pdf", "decoy.pdf", content_local_name="report.pdf")
 
 
 # --------------------------------------------------------------------------
-# Reject — metadata
+# Reject — flyleaf
 # --------------------------------------------------------------------------
 
-case("reject/metadata-empty")(lambda: container(metadata=b""))
-case("reject/metadata-invalid-toml")(
-    lambda: container(metadata=b'slipcase_version = "1.0\n\n[payload]\nfile = "report.pdf"\n')
+case("reject/flyleaf-empty")(lambda: container(flyleaf=b""))
+case("reject/flyleaf-invalid-toml")(
+    lambda: container(flyleaf=b'slipcase_version = "1.1\n\n[content]\nfile = "report.pdf"\n')
 )
-case("reject/metadata-not-utf8")(
-    lambda: container(metadata=b'slipcase_version = "1.0"\n\n[payload]\nfile = "caf\xe9.pdf"\n')
+case("reject/flyleaf-not-utf8")(
+    lambda: container(flyleaf=b'slipcase_version = "1.1"\n\n[content]\nfile = "caf\xe9.pdf"\n')
 )
 case("reject/missing-slipcase-version")(
-    lambda: container(metadata=b'[payload]\nfile = "report.pdf"\n')
+    lambda: container(flyleaf=b'[content]\nfile = "report.pdf"\n')
 )
-case("reject/missing-payload-file")(
-    lambda: container(metadata=b'slipcase_version = "1.0"\n\n[payload]\n')
+case("reject/missing-content-file-key")(
+    lambda: container(flyleaf=b'slipcase_version = "1.1"\n\n[content]\n')
 )
-case("reject/missing-payload-table")(lambda: container(metadata=b'slipcase_version = "1.0"\n'))
+case("reject/missing-content-table")(lambda: container(flyleaf=b'slipcase_version = "1.1"\n'))
 case("reject/version-not-string")(
-    lambda: container(metadata=b'slipcase_version = 1.0\n\n[payload]\nfile = "report.pdf"\n')
+    lambda: container(flyleaf=b'slipcase_version = 1.1\n\n[content]\nfile = "report.pdf"\n')
 )
-case("reject/payload-file-not-string")(
-    lambda: container(metadata=b'slipcase_version = "1.0"\n\n[payload]\nfile = 42\n')
+case("reject/content-file-not-string")(
+    lambda: container(flyleaf=b'slipcase_version = "1.1"\n\n[content]\nfile = 42\n')
 )
-case("reject/version-inside-payload-table")(
+case("reject/version-inside-content-table")(
     lambda: container(
-        metadata=b'[payload]\nfile = "report.pdf"\n\nslipcase_version = "1.0"\n'
+        flyleaf=b'[content]\nfile = "report.pdf"\n\nslipcase_version = "1.1"\n'
     )
 )
-case("reject/payload-not-a-table")(
-    lambda: container(metadata=b'slipcase_version = "1.0"\npayload = "report.pdf"\n')
+case("reject/content-not-a-table")(
+    lambda: container(flyleaf=b'slipcase_version = "1.1"\ncontent = "report.pdf"\n')
 )
 
 
 # --------------------------------------------------------------------------
-# Reject — payload.file
+# Reject — content.file
 # --------------------------------------------------------------------------
 # Each carries a member matching the stated name wherever ZIP allows it, so the
 # only violation is §2.3 itself.
 
-case("reject/payload-file-empty")(lambda: container("", "report.pdf"))
-case("reject/payload-file-dot")(lambda: container(".", "report.pdf"))
-case("reject/payload-file-dotdot")(lambda: container("..", "report.pdf"))
-case("reject/payload-file-forward-slash")(lambda: container("sub/report.pdf"))
-case("reject/payload-file-backslash")(lambda: container("sub\\report.pdf"))
-case("reject/payload-file-traversal")(lambda: container("../../etc/passwd"))
-case("reject/payload-file-colon-drive")(lambda: container("C:report.pdf"))
-case("reject/payload-file-colon-plain")(lambda: container("notes:draft.txt"))
-case("reject/payload-file-equals-metadata")(lambda: container(META_NAME, "report.pdf"))
+case("reject/content-file-empty")(lambda: container("", "report.pdf"))
+case("reject/content-file-dot")(lambda: container(".", "report.pdf"))
+case("reject/content-file-dotdot")(lambda: container("..", "report.pdf"))
+case("reject/content-file-forward-slash")(lambda: container("sub/report.pdf"))
+case("reject/content-file-backslash")(lambda: container("sub\\report.pdf"))
+case("reject/content-file-traversal")(lambda: container("../../etc/passwd"))
+case("reject/content-file-colon-drive")(lambda: container("C:report.pdf"))
+case("reject/content-file-colon-plain")(lambda: container("notes:draft.txt"))
+case("reject/content-file-equals-flyleaf")(lambda: container(FLYLEAF_NAME, "report.pdf"))
 
 # A parser may refuse the escape itself, in which case the container is rejected
 # for a different reason and the verdict is unchanged.
-case("reject/payload-file-nul")(lambda: container("rep\u0000ort.pdf"))
-case("reject/payload-file-newline")(lambda: container("report\u000apdf"))
-case("reject/payload-file-del")(lambda: container("report\u007fpdf"))
+case("reject/content-file-nul")(lambda: container("rep\u0000ort.pdf"))
+case("reject/content-file-newline")(lambda: container("report\u000apdf"))
+case("reject/content-file-del")(lambda: container("report\u007fpdf"))
 
 
 # --------------------------------------------------------------------------
-# Reject — payload entry type
+# Reject — content file entry type
 # --------------------------------------------------------------------------
 
-case("reject/payload-symlink")(
-    lambda: container(payload=b"/etc/passwd", payload_mode=MODE_SYMLINK)
+case("reject/content-file-symlink")(
+    lambda: container(content=b"/etc/passwd", content_mode=MODE_SYMLINK)
 )
-case("reject/payload-directory-entry")(
-    lambda: container(payload=b"", payload_mode=MODE_DIRECTORY)
+case("reject/content-file-directory-entry")(
+    lambda: container(content=b"", content_mode=MODE_DIRECTORY)
 )
-case("reject/payload-fifo-entry")(lambda: container(payload=b"", payload_mode=MODE_FIFO))
+case("reject/content-file-fifo-entry")(lambda: container(content=b"", content_mode=MODE_FIFO))
 
 
 # --------------------------------------------------------------------------
 # Undetermined and out of scope
 # --------------------------------------------------------------------------
 
-case("undetermined/encrypted-metadata-member")(lambda: container(encrypt_metadata=True))
+case("undetermined/encrypted-flyleaf")(lambda: container(encrypt_flyleaf=True))
 case("out-of-scope/version-2-0")(lambda: container(version="2.0"))
 case("out-of-scope/version-malformed")(lambda: container(version="banana"))
 case("out-of-scope/version-empty-string")(lambda: container(version=""))
+
+
+@case("out-of-scope/version-1-0")
+def _() -> bytes:
+    """A conformant 1.0 container, as SPEC Appendix C describes one.
+
+    The declaration is out of this version's scope by SPEC 2.4, but reaching
+    that verdict takes knowing 1.0's flyleaf name: a reader that knows only
+    this version's finds no flyleaf at all and never reads the declaration.
+    """
+    return build_zip([Entry(FLYLEAF_NAME_1_0, flyleaf_toml_1_0()), Entry("report.pdf", CONTENT)])
 
 
 # --------------------------------------------------------------------------
@@ -945,18 +982,18 @@ def check_coverage(manifest: list[dict]) -> None:
         sys.exit("generate.py: " + "\n".join(problems))
 
 
-# Metadata using TOML 1.1.0 syntax that the standard library cannot parse, since
+# Flyleaves using TOML 1.1.0 syntax that the standard library cannot parse, since
 # tomllib implements 1.0.0. Skipped by the self-check rather than passed silently.
-NEEDS_TOML_11 = {"accept/metadata-inline-table-multiline"}
+NEEDS_TOML_11 = {"accept/flyleaf-inline-table-multiline"}
 
 
 def check_cases(manifest: list[dict], out_dir: pathlib.Path) -> list[str]:
     """Re-read what was written and hold it to §2.2 and §2.1.
 
     A case declared conformant must actually be conformant. Checking only that
-    payload.file resolves is not enough: it misses a document whose
+    content.file resolves is not enough: it misses a document whose
     slipcase_version was captured by a preceding table header, which is how
-    accept/metadata-key-order-reversed shipped wrong: the half that was checked
+    accept/flyleaf-key-order-reversed shipped wrong: the half that was checked
     was fine.
     """
     problems = []
@@ -967,28 +1004,31 @@ def check_cases(manifest: list[dict], out_dir: pathlib.Path) -> list[str]:
         path = out_dir / entry.get("filename", f"{case_id}.slpc")
         try:
             with zipfile.ZipFile(path) as archive:
-                metadata = archive.read(META_NAME)
                 members = archive.namelist()
+                is_1_0 = FLYLEAF_NAME not in members
+                flyleaf = archive.read(FLYLEAF_NAME_1_0 if is_1_0 else FLYLEAF_NAME)
         except Exception as error:
             problems.append(f"{case_id}: unreadable archive: {error}")
             continue
-        if metadata.startswith(b"\xef\xbb\xbf"):
-            metadata = metadata[3:]
+        if flyleaf.startswith(b"\xef\xbb\xbf"):
+            flyleaf = flyleaf[3:]
         try:
-            document = tomllib.loads(metadata.decode("utf-8"))
+            document = tomllib.loads(flyleaf.decode("utf-8"))
         except Exception as error:
-            problems.append(f"{case_id}: metadata does not parse: {error}")
+            problems.append(f"{case_id}: flyleaf does not parse: {error}")
             continue
         if not isinstance(document.get("slipcase_version"), str):
             problems.append(
                 f"{case_id}: no root slipcase_version (root keys: {sorted(document)})"
             )
-        payload = document.get("payload")
-        target = payload.get("file") if isinstance(payload, dict) else None
+        # A 1.0 case is held to 1.0's names; SPEC Appendix C says nothing else differs.
+        table_name = "payload" if is_1_0 else "content"
+        table = document.get(table_name)
+        target = table.get("file") if isinstance(table, dict) else None
         if not isinstance(target, str):
-            problems.append(f"{case_id}: payload.file is not a string")
+            problems.append(f"{case_id}: {table_name}.file is not a string")
         elif target not in members:
-            problems.append(f"{case_id}: payload.file {target!r} names no member")
+            problems.append(f"{case_id}: {table_name}.file {target!r} names no member")
     return problems
 
 
