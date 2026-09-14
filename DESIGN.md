@@ -1,8 +1,8 @@
 # Slipcase — Design Document
 
 **Status:** design draft.
-**Document version:** draft, 2026-08-20
-**Specification version:** 1.0
+**Document version:** draft, 2026-09-14
+**Specification version:** 1.1
 
 `SPEC.md` states the rules. This document says why each one is drawn where it is,
 and what was considered and rejected. Nothing here is normative: where the two
@@ -25,26 +25,26 @@ up where it leaves off.
 
 One property of it bears on almost every decision below. Slipcase is
 domain-neutral: nothing in the format knows about any particular industry, system,
-or kind of document. Where a rule could have been bent toward one kind of payload,
+or kind of document. Where a rule could have been bent toward one kind of content file,
 it was not.
 
 ---
 
 ## 2. Created with ordinary tools
 
-A container can be built with `zip` and a text editor, and its contents recovered
+A container can be built with `zip` and a text editor, and its members recovered
 with `unzip`. No Slipcase implementation is required at either end, on any
 platform, and there is no incantation to get right:
 
 ```bash
-cat > slipcase.metadata.toml <<'EOF'
-slipcase_version = "1.0"
+cat > slipcase.flyleaf.toml <<'EOF'
+slipcase_version = "1.1"
 
-[payload]
+[content]
 file = "report.pdf"
 EOF
 
-zip report.pdf.slpc slipcase.metadata.toml report.pdf
+zip report.pdf.slpc slipcase.flyleaf.toml report.pdf
 ```
 
 That is a conformant container. Nothing about member order, compression method,
@@ -53,7 +53,7 @@ using the wrong tool.
 
 This is a design goal rather than a side effect. A metadata format that can only
 be read by its own tooling has moved the problem rather than solved it, and the
-metadata is a TOML file so a person can open it and read it with nothing
+flyleaf is a TOML file so a person can open it and read it with nothing
 installed.
 
 **This sets a complexity budget:** the format must be implementable in an
@@ -66,7 +66,7 @@ in a sentence has to justify itself hard.
 
 ### 3.1 Container structure — SPEC §2.1, §2.3, §2.5
 
-**Why `payload.file` is a plain filename.** A payload is one file, not a path into
+**Why `content.file` is a plain filename.** A content file is one file, not a path into
 a tree, and a name that cannot express a path cannot express a traversal. The
 colon is excluded because on some platforms a name containing one is treated as
 rooted, so joining it to a destination directory discards the destination. Control
@@ -83,14 +83,14 @@ a rule about traversal should not acquire a table of one operating system's
 reserved words. An implementation that cannot write the name it was given has a
 problem to report, not a name to change.
 
-**Why the payload must be a regular file entry.** An earlier draft named symbolic
+**Why the content file must be a regular file entry.** An earlier draft named symbolic
 links alone, which left directories, device nodes, and FIFOs unaddressed for no
 better reason than that links were the case worth worrying about. Naming the one
 kind that is permitted is shorter and closes the rest.
 
 **Why names are decoded before they are compared.** ZIP has no single name
 encoding. A reader and a writer that decode differently will disagree about
-whether `payload.file` matches any member, and the payload becomes unfindable in
+whether `content.file` matches any member, and the content file becomes unfindable in
 the containers whose names are not ASCII.
 
 **A rule for names flagged UTF-8 that are not UTF-8 was considered and rejected.**
@@ -100,14 +100,14 @@ raw bytes, Rust's `zip` substitutes U+FFFD, Python's `zipfile` refuses to open
 the archive. A rule would have reached none of them — Go complies without
 knowing it exists, Python cannot comply at all, and a Rust implementer either
 has read the crate's source and already found the problem or has not and would
-not apply the rule. The file it guards against needs a `payload.file` carrying
+not apply the rule. The file it guards against needs a `content.file` carrying
 U+FFFD, which only arises when something upstream already decoded a filename
 lossily.
 
 **Why the central directory decides.** A member's name is recorded in both its
 local file header and the central directory, and nothing requires the two to
 agree. Without naming one authoritative, two conforming readers can be walked into
-finding different payloads in the same file. Info-ZIP already resolves it this
+finding different content files in the same file. Info-ZIP already resolves it this
 way, reporting the disagreement and continuing with the central directory name.
 
 **Why the recorded offsets are taken from the start of the file.** A ZIP's end of
@@ -123,7 +123,7 @@ bought: a file with one reading. Adjusting offsets makes a file holding two
 archives readable as either, depending on where a reader starts, and it lets one file be a
 container and an executable at once, each reader finding the thing it came for.
 That is content-type confusion, and it is the attack a format invites when its whole
-purpose is to hand a payload to whatever the operating system has registered for
+purpose is to hand a content file to whatever the operating system has registered for
 it. Duplicate names were refused rather than resolved because which one wins has
 no good answer. Which archive wins has no better one.
 
@@ -138,7 +138,7 @@ above was written against the two shapes anybody had thought of, and a review on
 reference implementation. Its end of central directory record carries two entry
 counts — records on this disk, records in total — which every writer sets equal
 and which that implementation and its ZIP dependency read from *different* fields;
-declaring three and two hid a duplicate payload behind a conformant verdict. Its
+declaring three and two hid a duplicate content file behind a conformant verdict. Its
 comment length can be made to run past the end of the file, so that a reader
 taking the last signature it finds and a reader checking the length before
 believing it resolve two different directories. And which fields carry the Zip64
@@ -146,7 +146,7 @@ sentinel decides which of two records a reader believes.
 
 None of the three is a disagreement about what the file means. Each is a
 disagreement about which bytes the file *is*, and every one of them ends with two
-conforming readers holding the same file and naming different payloads — which is
+conforming readers holding the same file and naming different content files — which is
 what §2.1 already refused for duplicate member names and for two archives in one
 file, arriving a third time through a smaller door. So the record is required to
 be internally consistent rather than merely present, and a reader is spared
@@ -155,7 +155,7 @@ with it.
 
 **Why comparison is exact.** Case-sensitive and without normalization, because
 both alternatives are worse: case folding depends on locale, and normalizing means
-a payload can be found under a name it does not carry. The cost falls on writers
+a content file can be found under a name it does not carry. The cost falls on writers
 taking names from macOS, which returns NFD where most sources produce NFC, and
 that is a writer's problem with a writer's fix.
 
@@ -173,22 +173,43 @@ nothing, and nothing extracts them in any case.
 about a ZIP-based format will reasonably wonder whether member order, compression
 method, timestamps, encryption, or Zip64 are pinned. SPEC §2.5 answers all of them
 at once so that nobody writes a reader that rejects a container for a property the
-format never cared about. A zero-byte payload is valid for the same reason: an
+format never cared about. A zero-byte content file is valid for the same reason: an
 empty file is a file, and someone would otherwise guess it was not.
 
 **Why no magic bytes.** The extension and media type live outside the container.
 The alternative — a `mimetype` member stored uncompressed at a known offset — is
 examined and rejected in §5.
 
-### 3.2 The metadata member — SPEC §2.2, §2.4
+### 3.2 The flyleaf — SPEC §2.2, §2.4
 
 **Why it is mandatory, and why its name is fixed.** There is no such thing as a
-Slipcase container without metadata. The fixed name is what makes the payload
-discoverable, since the payload's own name is not known in advance.
+Slipcase container without a flyleaf. The fixed name is what makes the content file
+discoverable, since the content file's own name is not known in advance.
+
+**Why the members are called the flyleaf and the content file.** A slipcase holds
+one book, and a flyleaf is the leaf at the front of a book where a note about it
+is written: whose it is, where it came from, what it is. The member is named for
+what it is for rather than for what it holds. "Metadata" names what the flyleaf
+holds, and the format defines no vocabulary for that, so a term built on the word
+says nothing the member's keys do not already say, and it collides with every
+ordinary use of the word in this document and in the keys people put in a
+flyleaf. The filename carries the same word as the defined term, so that a reader
+of `unzip -l` and a reader of `SPEC.md` are using one name.
+
+The content file is the thing the flyleaf describes, and the term is chosen for
+being countable and for carrying no second meaning. "Payload" carries one: in the
+literature SPEC §6 is written against, it is the word for the part of an attack
+that does the damage, and a specification whose security section treats every
+container as attacker-controlled cannot use the same word for the file it exists
+to deliver without one sense colouring the other. "Document" was rejected because
+the format is type-neutral by §1, and "subject" because it is a Dublin Core key
+and the one a user is likeliest to add to a flyleaf. The term is two words so
+that the bare word "content" goes on meaning what it ordinarily means, and so
+that it echoes the key that names it.
 
 **Why the TOML version is pinned.** An implementer otherwise does not know which
 grammar to write against. It is unrelated to `slipcase_version`, which names this
-specification rather than the metadata language.
+specification rather than the language the flyleaf is written in.
 
 **Why a byte order mark is permitted.** TOML says nothing about a leading mark and
 parsers split on whether to strip one or reject it, so the format decides rather
@@ -196,11 +217,11 @@ than leaving it to whichever library an implementation happens to link. Rejectin
 would punish someone whose editor inserted a character they cannot see, which sits
 badly with a format that advertises hand-editing.
 
-**Why an unreadable metadata member is undetermined.** SPEC §2.5 does not permit
+**Why an unreadable flyleaf is undetermined.** SPEC §2.5 does not permit
 rejecting a container because a member is encrypted, while SPEC §2.2 requires the
-metadata member to parse as TOML, which an encrypted member does not. The
-requirement therefore applies to the decrypted content, and a container whose
-metadata cannot be read is undetermined rather than non-conformant. A reader
+flyleaf to parse as TOML, which an encrypted member does not. The
+requirement therefore applies to the decrypted bytes, and a container whose
+flyleaf cannot be read is undetermined rather than non-conformant. A reader
 without the key knows it cannot answer the question, and that is different from
 knowing the answer is no.
 
@@ -229,6 +250,15 @@ distinction checkable: a change that alters no case's verdict is editorial, and
 one that alters any case's verdict is not, which is a test rather than a
 judgement.
 
+**Why 1.1 exists.** Both renames change what counts as a conformant container,
+so SPEC §2.4 moves the number: a container conformant to 1.0 carries neither name,
+and is out of 1.1's scope by its version key before the names are looked at. They
+land in one version rather than two because every version is a break each reader
+has to absorb, by §2.4's own rule that the number promises nothing, and two breaks
+taken separately cost an implementation twice what one costs. Nothing else moves with
+them, which is what SPEC Appendix C records, so a reader that handles 1.0 handles
+1.1 by learning two names and a version string.
+
 **Why conformance is relative to a version.** This specification can say whether a
 container declaring `1.0` conforms to it. It cannot say anything about one
 declaring `2.0`, because it does not know what `2.0` requires, and the same holds
@@ -248,14 +278,14 @@ keys nobody has defined yet is the mechanism by which the format grows without
 breaking.
 
 **Why there is no canonical serialization.** TOML has none. Two tools writing the
-same metadata will not produce identical bytes, and a container whose metadata has
-been rewritten will not reproduce its original bytes even when the content is
+same flyleaf will not produce identical bytes, and a container whose flyleaf has
+been rewritten will not reproduce its original bytes even when what it says is
 unchanged. Anything built on top has to account for that rather than assume
 re-serialization is stable.
 
-**Why the format defines no vocabulary.** `slipcase_version` and `payload.file`
+**Why the format defines no vocabulary.** `slipcase_version` and `content.file`
 are structural: a reader cannot open the container without them, and both describe
-the container rather than the payload. Every other key describes the payload, and
+the container rather than the content file. Every other key describes the content file, and
 what those keys mean is not something a validator can check against a file.
 
 That work belongs in a separate document with a separate lifecycle. A container
@@ -271,17 +301,17 @@ problem with a vocabulary fix, and it is not the container's to solve.
 
 Defining a meaning for nesting would mean defining aggregation, which §5
 rejects. Prohibiting it would be a rule with nothing behind it, since a
-container inside a container is a payload like any other.
+container inside a container is a content file like any other.
 
 ### 3.4 The naming convention — SPEC Appendix B
 
 The pattern is `.gz`, `.zst`, and `.gpg`: a suffix appended to a name that keeps
 its own. It was adopted rather than invented, so the awkward cases were already
-solved — `archive.tar.gz.slpc`, `notes.toml.slpc`, a payload with no extension
+solved — `archive.tar.gz.slpc`, `notes.toml.slpc`, a content file with no extension
 at all.
 
 It stays a convention rather than a rule because enforcing it would buy nothing.
-`payload.file` is the only authority on what the payload is called, and a reader
+`content.file` is the only authority on what the content file is called, and a reader
 that fell back to the container's own name would be guessing.
 
 ---
@@ -296,10 +326,10 @@ implementation and watching what it does.
 
 **Order and lookup.** Nothing in SPEC §2.1 fixes member order, so a container
 written by any tool in any order is conformant, and a reader that depends on order
-will fail on containers it must accept. The payload is found by `payload.file`
+will fail on containers it must accept. The content file is found by `content.file`
 alone for the same reason the convention in Appendix B is not a rule: the
 convention is not a fallback, position is not a fallback, and no other member may
-be treated as the payload.
+be treated as the content file.
 
 **Unknown keys and unknown members.** The preservation rule does two jobs. It is
 the entire forward-compatibility story, and it is what makes a third-party tool
@@ -310,7 +340,7 @@ recognize destroys data silently.
 hands a caller files the format never described. Anyone wanting a full unpack has
 a zip tool for that.
 
-**Rejecting rather than sanitizing.** Sanitizing a bad `payload.file` produces a
+**Rejecting rather than sanitizing.** Sanitizing a bad `content.file` produces a
 file at a path that no longer matches it, which breaks the format's own lookup.
 
 **Uniqueness by enumeration.** SPEC §2.1 says there is one member of each name and
@@ -320,10 +350,10 @@ directory by name, so two members arrive as one and counting them returns one.
 Python's `zipfile` hands back the last, Java's `ZipFile.getEntry` hands back the
 last, and a Rust implementation building a map gets whatever its map does. Left
 unstated, several implementations can report one container conformant while
-disagreeing about which bytes are its metadata, which is the shape of Android's
+disagreeing about which bytes are its flyleaf, which is the shape of Android's
 Master Key bug. Unlike most of this section it can be put to a container, and the
-corpus does: `reject/duplicate-metadata-members-agreeing` holds two byte-identical
-metadata members, so nothing downstream of the duplicate can fail and a reader
+corpus does: `reject/duplicate-flyleaves-agreeing` holds two byte-identical
+flyleaves, so nothing downstream of the duplicate can fail and a reader
 that never counted them accepts it.
 
 **Not overwriting.** SPEC §2.3 guards the boundary of a destination directory: a
@@ -332,14 +362,14 @@ says nothing about what is already inside that directory, and it never could —
 `.bashrc`, `authorized_keys` and `config` are plain filenames and conformant ones.
 A tool extracting into the working directory, which is the natural default for a
 tool given one argument, is the exposed case. The rule is on the write rather than
-on the name, because the name is not the problem: somebody extracting a payload
+on the name, because the name is not the problem: somebody extracting a content file
 called `config` into a directory that has one has a decision to make, and an
 implementation's job is to ask rather than to guess. It has to be the creation
 that refuses rather than a test before it, or two processes pass the test
 together.
 
 **Permission bits.** SPEC §2.5 leaves external attributes unconstrained and forbids
-rejecting a container over them, and this section already limits the payload to a
+rejecting a container over them, and this section already limits the content file to a
 regular file entry. Nothing said what mode the extracted file should carry, and
 the idiomatic extraction loop in more than one language restores the recorded one.
 A container conformant in every respect could therefore put a setuid, setgid or
@@ -389,7 +419,7 @@ ZIP parser an implementation used, since they applied equally to every ZIP
 consumer. Four of the rules above are now security requirements. The
 resource-limit claim was wrong in its premise rather than in its conclusion: a ZIP
 consumer chooses what to inflate and a reader of this format does not, because
-inflating the metadata member is how it finds out whether it is holding a
+inflating the flyleaf is how it finds out whether it is holding a
 container. SPEC §6 takes that up, and §6 below says why it is a rule rather than a
 library's business.
 
@@ -399,24 +429,24 @@ library's business.
 
 **Signatures.** Out of scope. Signing layers above Slipcase, or arrives in a later
 specification version with its own member, which an implementation written against
-1.0 will open and ignore. Anything built on top must account for the absence of a
+this version will open and ignore. Anything built on top must account for the absence of a
 canonical serialization: hash what was actually signed, rather than assuming a
 container re-serializes identically.
 
-**Multiple payloads.** `payload.file` names one member, so the metadata describes
+**Multiple content files.** `content.file` names one member, so the flyleaf describes
 one file. A container may physically hold more, but the format assigns them no
-meaning and defines no aggregation mechanism. Naming N payloads would reinvent ZIP
-and make the metadata ambiguous about what it describes.
+meaning and defines no aggregation mechanism. Naming N content files would reinvent ZIP
+and make the flyleaf ambiguous about what it describes.
 
 **Encryption.** The format adds none of its own and forbids none. Either member may
 be encrypted by ZIP's own mechanisms or by encrypting the file before packing it,
-and a container whose metadata is unreadable to a passer-by is still a container:
+and a container whose flyleaf is unreadable to a passer-by is still a container:
 it is attaching metadata to a file for whoever holds the key. Worth knowing rather
 than legislating: ZIP encryption narrows which implementations can open a
 container, since Go's `archive/zip` supports none of it and Info-ZIP's `unzip` has
 not handled AES.
 
-**Fixity.** No checksum key, and no position on whether a payload has changed. That
+**Fixity.** No checksum key, and no position on whether a content file has changed. That
 is a preservation question, and preservation is a separate discipline with its own
 formats. Anyone who wants a digest records one; the format simply does not define
 it, in the same way it defines no other descriptive key.
@@ -444,8 +474,8 @@ the magic rule.
 
 **Why a bound is a rule and not a library's business.** The claim this replaces
 held that resource limits belong to whatever library does the parsing, and apply
-equally to everyone using that format. True of the payload, which nobody inflates
-until somebody asks for it. Not true of the metadata member: identifying a
+equally to everyone using that format. True of the content file, which nobody inflates
+until somebody asks for it. Not true of the flyleaf: identifying a
 container *is* inflating and parsing that member, so a reader spends the memory
 before it knows whether the file was a container, and a reader invoked by a file
 manager spends it without anybody having asked for anything. Deflate returns a
@@ -454,7 +484,7 @@ is small enough to mail.
 
 **Why no number is given.** Every candidate was wrong somewhere. A megabyte is
 generous for the two keys this format defines and mean for anybody using the
-metadata for what SPEC §2.2 permits, which is anything they like. A gigabyte is no
+flyleaf for what SPEC §2.2 permits, which is anything they like. A gigabyte is no
 bound at all on a phone. The limit has to come from the reader's own situation,
 and requiring one without naming it is the most a format can honestly do.
 
@@ -469,7 +499,7 @@ is what is true.
 **Why two of the four subjects are notes and not rules.** The encryption channel
 and the nesting depth are both consequences of decisions taken in §5 above, and
 neither can be closed without reversing one of them. Undetermined is what an
-encrypted metadata member yields because the format adds no encryption and forbids
+encrypted flyleaf yields because the format adds no encryption and forbids
 none; a rule against being skipped would be a rule about what a scanner does with
 an answer, which is beyond anything this document can require. Nesting is
 permitted and meaningless by SPEC §2.3, and a depth limit is only owed by
