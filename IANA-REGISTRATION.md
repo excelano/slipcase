@@ -291,9 +291,8 @@ forbids applying the archive's permission bits; and a container that arrived
 from elsewhere has that fact carried onto the payload where the platform records
 such a thing. Neither is a requirement this specification imposes, so both are
 written as practices rather than as rules, which is what keeps the registration
-from claiming more than §3 says. `excelano/slipcase-desktop`'s `DESIGN.md` §5
-holds the reasoning and its `CHECKLIST.md` holds the measurements on all three
-platforms.
+from claiming more than §3 says. `excelano/slipcase-desktop`'s `DESIGN.md` §7
+holds the reasoning and the measurements on all three platforms.
 
 ## What the registration changes
 
@@ -318,8 +317,8 @@ carries `<alias type="application/x.slipcase+zip"/>`, and `install.sh` and
 `packaging/macos/Info.plist.in` updates the `public.mime-type` tag;
 `packaging/windows/install.ps1` and `uninstall.ps1` update `$contentType`; and
 `AppxManifest.xml.in` updates the `ContentType` attribute. The rest are prose in
-`README.md`, `DESIGN.md`, `CHECKLIST.md`, the three handovers, and the Linux CI
-workflow, which asserts the type and will fail until it is changed.
+`README.md`, `DESIGN.md`, and the Linux CI workflow, which asserts the type and
+will fail until it is changed.
 
 Upgrading an installed 0.1.0 needs more than the alias, on two platforms.
 Installing the renamed XML beside the old one registers both as real types
