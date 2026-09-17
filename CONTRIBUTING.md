@@ -55,6 +55,8 @@ cites an address that has to outlive several years of commits, and a `blob/main`
 link follows the branch. So the tag names a revision rather than a version: an
 editorial change stays 1.0 under §2.4 and gets a tag of its own rather than
 moving this one, and a change that moves `slipcase_version` gets both.
+Editorial revisions are tagged `v1.0.1`, `v1.0.2`, and so on: the third number
+counts revisions of the text and is not part of `slipcase_version`.
 
 `conformance/` is what makes the distinction checkable rather than arguable. A
 change that alters no case's verdict is editorial; one that alters any case's

@@ -1,26 +1,28 @@
 # Media type registration
 
-SPEC §4 names `application/x.slipcase+zip`, provisional in the unregistered `x.`
-tree of [RFC 6838](https://www.rfc-editor.org/rfc/rfc6838). That tree is defined
-for use inside a private or otherwise limited environment, and §3.4 says a type
-meant for public distribution does not belong in it. Slipcase is going into two
-application stores, so the type needs a registered name.
+The format's first media type was `application/x.slipcase+zip`, provisional in
+the unregistered `x.` tree of [RFC 6838](https://www.rfc-editor.org/rfc/rfc6838).
+That tree is defined for use inside a private or otherwise limited environment,
+and §3.4 says a type meant for public distribution does not belong in it.
+Slipcase is going into two application stores, so the type needed a registered
+name.
 
-**Submitted 2026-08-29.** This file is what went in, field for field. It is not
-the specification and amends nothing: SPEC §4 continues to name the `x.` type
-until IANA answers, and the section headed *If it is accepted* below is what
-changes when it does.
+**Submitted 2026-08-29, registered 2026-09-16** as
+`application/vnd.excelano.slipcase+zip`. The entry is at
+<https://www.iana.org/assignments/media-types/application/vnd.excelano.slipcase+zip>.
+This file is what went in, field for field. It is not the specification and
+amends nothing: SPEC §4 names the registered type, and the section headed *What
+the registration changes* below is what follows from it.
 
-What happens next is not ours to drive. The form posts to `media-types@iana.org`
-for public discussion, then a designated expert reviews it, then IANA registers
-it or comes back with questions. Anything that arrives should be answered
-against this file rather than composed fresh, since every field here is drawn
-from SPEC §6, §3 and §2.1 rather than paraphrased — an answer is a citation, and
-a reply that reasons differently from the text under review is how a
-registration and its specification start to disagree.
+Anything that changes the registration from here — a contact change, the update
+that version 1.1 needs — is an update under RFC 6838 §5.5, sent to
+`iana@iana.org`, and is composed against this file rather than fresh, since
+every field here is drawn from SPEC §6, §3 and §2.1 rather than paraphrased. A
+change that reasons differently from the text it cites is how a registration
+and its specification start to disagree.
 
-**If a question does change a field, change it here first.** This file is the
-copy of record, and a form is not somewhere a later reader can look.
+**If an update does change a field, change it here first.** This file is the
+copy of record, and an email is not somewhere a later reader can look.
 
 **The route is the vendor tree.** `application/vnd.excelano.slipcase+zip`, by
 expert review, through the form at <https://www.iana.org/form/media-types>. It
@@ -293,7 +295,7 @@ from claiming more than §3 says. `excelano/slipcase-desktop`'s `DESIGN.md` §5
 holds the reasoning and its `CHECKLIST.md` holds the measurements on all three
 platforms.
 
-## If it is accepted
+## What the registration changes
 
 The type string appears in no container, which is what keeps this small: nothing
 already written has to be rewritten, and only the platform databases and the
@@ -305,11 +307,9 @@ now: `excelano.com`'s `.htaccess` gained an `AddType` the same day, so that the
 sample container the Microsoft Store's certification reviewer downloads is
 served as something rather than guessed at.
 
-In `excelano/slipcase`: SPEC §4 names the registered type and records
-`application/x.slipcase+zip` as the name it supersedes, and `DESIGN.md` gains the
-matching entry. `CONTRIBUTING.md` requires a rule and its reasoning to travel
-together, and DESIGN records no reasoning for §4 at all today, which is a gap
-this is the occasion to close rather than a new one to open.
+In `excelano/slipcase` the change is made: SPEC §4 names the registered type and
+records `application/x.slipcase+zip` as the name it supersedes, and `DESIGN.md`
+§3.5 carries the reasoning.
 
 In `excelano/slipcase-desktop`, the parts that are code:
 `packaging/linux/application-x.slipcase+zip.xml` is renamed for the new type and

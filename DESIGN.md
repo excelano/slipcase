@@ -284,6 +284,31 @@ It stays a convention rather than a rule because enforcing it would buy nothing.
 `payload.file` is the only authority on what the payload is called, and a reader
 that fell back to the container's own name would be guessing.
 
+### 3.5 The media type — SPEC §4
+
+**Why the vendor tree.** RFC 6838 §3.4 defines the unregistered `x.` tree for
+use inside a private or otherwise limited environment, and says a type meant for
+public distribution does not belong in it; a format going into application
+stores is publicly distributed. Of the registered trees, the standards tree is
+not available without a standards body, and the personal tree is for an
+individual rather than for a company's format. The vendor tree is what is left,
+and it costs nothing beyond expert review. `IANA-REGISTRATION.md` is the
+submission, field for field, and the entry was registered on 2026-09-16.
+
+**Why the `+zip` suffix.** RFC 6839 registers `+zip` as a structured syntax
+suffix, and it says of a container what §2 above says: a consumer that has never
+heard of the format can treat one as a ZIP archive and recover both members. A
+type without the suffix would hide that from anything that dispatches on
+suffixes.
+
+**Why the provisional name stays an alias.** Implementations released before the
+registration, and the platform databases they installed into, name
+`application/x.slipcase+zip`. The registration records it as a deprecated alias
+so that those installations continue to resolve, and SPEC §4 names it as the
+superseded name for the same reason. Nothing inside a container names either
+type, which is what confines the change to documents and platform databases
+(§3.1 above, on magic bytes, is why).
+
 ---
 
 ## 4. Why there are requirements on programs — SPEC §3

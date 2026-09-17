@@ -122,7 +122,7 @@ Several of these are security requirements. The one that is not stated here is i
 
 ## 4. File extension and media type
 
-The file extension is `.slpc`. The media type is `application/x.slipcase+zip`, provisional in the unregistered `x.` tree of [RFC 6838](https://www.rfc-editor.org/rfc/rfc6838).
+The file extension is `.slpc`. The media type is [`application/vnd.excelano.slipcase+zip`](https://www.iana.org/assignments/media-types/application/vnd.excelano.slipcase+zip), registered in the vendor tree of [RFC 6838](https://www.rfc-editor.org/rfc/rfc6838). It supersedes `application/x.slipcase+zip`, provisional in the unregistered `x.` tree, which the registration records as a deprecated alias.
 
 Neither appears inside a container. A container is identified by opening it and finding a conformant metadata member; this specification reserves no magic bytes and defines no identification by content.
 
