@@ -334,13 +334,11 @@ considerations above name `slipcase.metadata.toml` and `payload.file`, and the
 *Published specification* field cites the `v1.0` tag; 1.1 calls them
 `slipcase.flyleaf.toml` and `content.file`. The registration is of the type and
 not of a version, and the type string appears in no container, so 1.1 needs no
-new registration. It needs an update to this one under RFC 6838 §5.5, filed
-through the same form by the change controller once the registration exists and
-not before, since an amendment during review is a second submission for the
-reviewer to reconcile with the first. The update moves the *Published
-specification* pointer to a version-neutral address and rewrites the sentences
-that name the two members; until it is filed, the registry text describes 1.0
-and is not wrong.
+new registration. It needs an update to this one under RFC 6838 §5.5, sent by
+the change controller once 1.1 is final and tagged, so that the update cites a
+text that will not move. The update points *Published specification* at a
+version-neutral address and rewrites the sentences that name the two members;
+until it is sent, the registry text describes 1.0 and is not wrong.
 
 Not worth doing yet, and recorded here so the question is not asked twice.
 Contributing the type to freedesktop's `shared-mime-info` would let a Linux
