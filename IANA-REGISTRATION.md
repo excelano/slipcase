@@ -76,7 +76,7 @@ Security considerations:
 
    Identifying a container is a parse of untrusted input. A consumer cannot
    know whether a file is a container without locating the archive's central
-   directory, decompressing the member named "slipcase.metadata.toml", and
+   directory, decompressing the member named "slipcase.flyleaf.toml", and
    parsing it as TOML, and it must do all of that before anything about the
    file has been established. This is not the position of a general ZIP
    consumer, which chooses what to extract and may decline. Deflate returns a
@@ -86,52 +86,50 @@ Security considerations:
    whatever happens to be present.
 
    The specification therefore requires an implementation to bound the
-   decompressed size of the metadata member, and the depth to which it parses
-   that member, and to report a container exceeding either bound as
-   undetermined rather than as non-conformant. The size the central directory
-   records for a member is not that bound. Nothing checks that figure against
-   what the member inflates to, and mainstream ZIP implementations do not
-   enforce it, so a directory entry declaring a hundred bytes may still yield
-   two hundred megabytes. The bound has to be applied to the bytes as they
-   arrive.
+   decompressed size of the flyleaf, and the depth to which it parses it, and
+   to report a container exceeding either bound as undetermined rather than
+   as non-conformant. The size the central directory records for a member is
+   not that bound. Nothing checks that figure against what the member
+   inflates to, and mainstream ZIP implementations do not enforce it, so a
+   directory entry declaring a hundred bytes may still yield two hundred
+   megabytes. The bound has to be applied to the bytes as they arrive.
 
-   The payload is arbitrary. The format constrains neither its type nor its
-   content nor its length, so the security considerations of whatever the
-   payload turns out to be apply to the payload, and a container is a
-   transport for them. A consumer that hands a payload to a system handler is
-   invoking that handler on content that arrived from elsewhere, and should
-   treat it with whatever care its platform's rules for downloaded content
-   require.
+   The content file is arbitrary. The format constrains neither its type nor
+   its content nor its length, so the security considerations of whatever the
+   content turns out to be apply to it, and a container is a transport for
+   them. A consumer that hands a content file to a system handler is invoking
+   that handler on content that arrived from elsewhere, and should treat it
+   with whatever care its platform's rules for downloaded content require.
 
    Two practices follow from that and are not requirements of this
    specification, which takes no position on what a consumer does with a
-   payload once it has one. Where the host platform records that a file
-   arrived from elsewhere, an implementation that extracts a payload can put
-   the same record on the copy, so that the platform's own handling of
-   downloaded content reaches the payload rather than stopping at the
-   container. And where a consumer reports what it found rather than deciding
-   for the user, what it reports should come from the container: the
-   specification's requirement that an extracted payload not receive the
-   archive's permission bits means a payload stored executable does not extract
-   executable, which is a fact a consumer can state without guessing at the
-   payload's type from its name.
+   content file once it has one. Where the host platform records that a file
+   arrived from elsewhere, an implementation that extracts a content file can
+   put the same record on the copy, so that the platform's own handling of
+   downloaded content reaches it rather than stopping at the container. And
+   where a consumer reports what it found rather than deciding for the user,
+   what it reports should come from the container: the specification's
+   requirement that an extracted content file not receive the archive's
+   permission bits means a content file stored executable does not extract
+   executable, which is a fact a consumer can state without guessing at its
+   type from its name.
 
-   The metadata is unauthenticated. This version of the format defines no
+   The flyleaf is unauthenticated. This version of the format defines no
    signature, attestation, checksum, or fixity mechanism. Nothing inside a
-   container establishes who wrote it, or that its metadata describes its
-   payload, and a consumer must not present the metadata as though something
-   had.
+   container establishes who wrote it, or that its flyleaf describes its
+   content file, and a consumer must not present the flyleaf as though
+   something had.
 
-   The payload's name cannot express a path. "payload.file" is required to be
-   a plain filename: non-empty, not "." or "..", not equal to the metadata
-   member's name, and containing no solidus, reverse solidus, colon, C0
+   The content file's name cannot express a path. "content.file" is required
+   to be a plain filename: non-empty, not "." or "..", not equal to the
+   flyleaf's name, and containing no solidus, reverse solidus, colon, C0
    character, or DEL. An implementation is required to reject a container
    violating this rather than to sanitize the name, so that a container
    cannot direct a write outside the directory its caller chose. An
-   implementation is separately required to create an extracted payload with
-   the permissions a newly created file would ordinarily receive, and never
-   to apply permission bits recorded in the archive, so that a container
-   cannot make the file it extracts executable.
+   implementation is separately required to create an extracted content file
+   with the permissions a newly created file would ordinarily receive, and
+   never to apply permission bits recorded in the archive, so that a
+   container cannot make the file it extracts executable.
 
    A member name is attacker-controlled text that a person reads in order to
    decide whether to open something. The specification requires the Unicode
@@ -140,17 +138,17 @@ Security considerations:
    that a name cannot be arranged to read as an extension it does not have.
 
    Undetermined can be arranged. The format defines no encryption of its own
-   and forbids none, so a container whose metadata member is encrypted can be
+   and forbids none, so a container whose flyleaf is encrypted can be
    established neither as conformant nor as non-conformant. A program
    treating that verdict as a reason to skip the file can be made to skip on
-   purpose, while the payload sits in the same archive unencrypted and
-   legible to anything that never consulted the metadata. Undetermined is a
+   purpose, while the content file sits in the same archive unencrypted and
+   legible to anything that never consulted the flyleaf. Undetermined is a
    reason to look further rather than a reason to stop.
 
-   Nesting is not bounded. A payload may itself be a container, the
+   Nesting is not bounded. A content file may itself be a container, the
    arrangement carries no defined meaning, and nothing in the specification
-   limits how deep it may go. An implementation that follows a payload into
-   another container needs a depth limit of its own.
+   limits how deep it may go. An implementation that follows a content file
+   into another container needs a depth limit of its own.
 
 Interoperability considerations:
    A container is an ordinary ZIP archive, so a consumer that has never heard
@@ -165,12 +163,12 @@ Interoperability considerations:
    purpose bit 11 is set and as CP437 otherwise, and are then compared
    exactly over code points, case-sensitively and with no Unicode
    normalization applied to either side. An implementation applying a
-   different rule can fail to find a payload that another implementation
+   different rule can fail to find a content file that another implementation
    finds.
 
    The format defines no canonical TOML serialization, because TOML defines
-   none. Two writers given the same metadata need not produce identical
-   bytes, so comparing bytes is not a test of equivalence.
+   none. Two writers given the same flyleaf need not produce identical bytes,
+   so comparing bytes is not a test of equivalence.
 
    The value of "slipcase_version" implies no compatibility at any level,
    including between values differing only in their minor component. An
@@ -178,20 +176,20 @@ Interoperability considerations:
    container declaring a higher one.
 
    A conformance corpus accompanies the specification, at
-   <https://github.com/excelano/slipcase/tree/v1.0/conformance>. It gives an
+   <https://github.com/excelano/slipcase/tree/v1.1/conformance>. It gives an
    implementer a set of containers with recorded verdicts to check against.
 
 Published specification:
-   slipcase - Specification, version 1.0, final.
-   <https://github.com/excelano/slipcase/blob/v1.0/SPEC.md>
+   slipcase - Specification, version 1.1, final.
+   <https://github.com/excelano/slipcase/blob/v1.1/SPEC.md>
 
    Dedicated to the public domain under CC0 1.0, so it may be implemented,
    quoted, or embedded by anyone.
 
 Application Usage:
    Slipcase, a desktop application for Linux, macOS, and Windows that opens a
-   container, presents its metadata as an editable tree, and hands the
-   payload to the system handler registered for it.
+   container, presents its flyleaf as an editable tree, and hands the content
+   file to the system handler registered for it.
    <https://github.com/excelano/slipcase-desktop>
 
    slpc, a Rust library that reads and writes containers.
@@ -223,7 +221,7 @@ Additional Information:
       None. The specification reserves no magic bytes and defines no
       identification by content. A container begins with the bytes any ZIP
       archive begins with, and is identified by opening the archive and
-      finding a conformant metadata member.
+      finding a conformant flyleaf.
 
    File extension(s):
       slpc
@@ -242,7 +240,7 @@ Other Information & Comments:
    The extension and the media type both live outside the container and
    neither appears inside one. This is deliberate: a container carries no
    member recording its own type, and a reader establishes what it is holding
-   by reading the metadata member rather than by trusting a name.
+   by reading the flyleaf rather than by trusting a name.
 
 Contact Person:
    David M. Anderson <hello@excelano.com>
@@ -329,16 +327,19 @@ running `update-mime-database`. On Windows the old key under
 removes it, and a stale entry there maps `.slpc` to a type nothing claims.
 Neither is hard, and neither happens by itself.
 
-**Version 1.1 renames both members the template names.** The security
-considerations above name `slipcase.metadata.toml` and `payload.file`, and the
-*Published specification* field cites the `v1.0` tag; 1.1 calls them
-`slipcase.flyleaf.toml` and `content.file`. The registration is of the type and
-not of a version, and the type string appears in no container, so 1.1 needs no
-new registration. It needs an update to this one under RFC 6838 §5.5, sent by
-the change controller once 1.1 is final and tagged, so that the update cites a
-text that will not move. The update points *Published specification* at a
-version-neutral address and rewrites the sentences that name the two members;
-until it is sent, the registry text describes 1.0 and is not wrong.
+**Version 1.1 renamed both members the template names, and the template above
+is the update.** 1.0 named `slipcase.metadata.toml` and `payload.file`, and
+its *Published specification* field cited the `v1.0` tag; 1.1 calls them
+`slipcase.flyleaf.toml` and `content.file` and the field now cites `v1.1`,
+tag-pinned the same way 1.0 was rather than pointed at a version-neutral
+address — the pattern IANA has already reviewed once, and no standing
+commitment to rebake anything at every future version. The registration is
+of the type and not of a version, and the type string appears in no
+container, so 1.1 needed no new registration, only this update to the
+existing one under RFC 6838 §5.5, sent by the change controller now that 1.1
+is final and tagged, so that it cites a text that will not move. Ready to
+send as of 2026-09-22; until it is, the registry text describes 1.0 and is
+not wrong.
 
 Not worth doing yet, and recorded here so the question is not asked twice.
 Contributing the type to freedesktop's `shared-mime-info` would let a Linux
