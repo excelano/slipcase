@@ -42,21 +42,22 @@ the case is a bug. See `conformance/README.md`.
 
 ## The version key
 
-`SPEC.md` 1.1 is a draft. While a version is a draft, changes to it land without
-moving the number, which is why nothing below 1.0 exists to compare against. Once
-a version is declared final, any change to what counts as a conformant container
-moves `slipcase_version`, and editorial changes — corrections, clarifications,
-added examples — do not. §2.4 is the rule; it governs this repository as much as
-it governs a reader. 1.0 is final as of 2026-08-29.
+While a version is a draft, changes to it land without moving the number.
+Once a version is declared final, any change to what counts as a conformant
+container moves `slipcase_version`, and editorial changes — corrections,
+clarifications, added examples — do not. §2.4 is the rule; it governs this
+repository as much as it governs a reader. 1.0 is final as of 2026-08-29, and
+1.1 as of 2026-09-22.
 
-A tag marks each revision of the specification, and `v1.0` is the text as
-declared final on 2026-08-29. It exists because the media type registration
-cites an address that has to outlive several years of commits, and a `blob/main`
-link follows the branch. So the tag names a revision rather than a version: an
-editorial change stays 1.0 under §2.4 and gets a tag of its own rather than
-moving this one, and a change that moves `slipcase_version` gets both.
-Editorial revisions are tagged `v1.0.1`, `v1.0.2`, and so on: the third number
-counts revisions of the text and is not part of `slipcase_version`.
+A tag marks each revision of the specification: `v1.0` is the text as
+declared final on 2026-08-29, and `v1.1` the text as declared final on
+2026-09-22. Both exist because the media type registration cites an address
+that has to outlive several years of commits, and a `blob/main` link follows
+the branch. So a tag names a revision rather than a version: an editorial
+change stays under its version's number under §2.4 and gets a tag of its own
+rather than moving this one, and a change that moves `slipcase_version` gets
+both. Editorial revisions are tagged `v1.0.1`, `v1.1.1`, and so on: the third
+number counts revisions of the text and is not part of `slipcase_version`.
 
 `conformance/` is what makes the distinction checkable rather than arguable. A
 change that alters no case's verdict is editorial; one that alters any case's

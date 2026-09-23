@@ -269,6 +269,12 @@ rather than promising there will not be another, because §2.4 already declines
 to promise a program anything, and an appendix that did would be the one place
 the document broke its own rule.
 
+**Why 1.1 is final, and what that costs.** Marked final on 2026-09-22, when the
+same three things stood again: the corpus at 90 cases, `slpc-rust` published at
+0.4.0, and `slipcase-desktop` and `slipcase-open` both released carrying 1.1.
+What finality costs is stated in the entry above; §2.4 draws no line between one
+version's and another's.
+
 **Why conformance is relative to a version.** This specification can say whether a
 container declaring `1.0` conforms to it. It cannot say anything about one
 declaring `2.0`, because it does not know what `2.0` requires, and the same holds
