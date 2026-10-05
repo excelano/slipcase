@@ -41,7 +41,7 @@ says, not to say anything of its own.
 
 Section 2 states properties of a container, so each case is a file plus an
 expected verdict. Section 3 states requirements on programs — preserving unknown
-keys, writing only the content file on extract, refusing to sanitize a bad
+keys, what extraction writes and where, refusing to sanitize a bad
 `content.file`, escaping a name before displaying it — and no sample file can
 test those.
 
