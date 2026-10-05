@@ -256,7 +256,7 @@ Change controller:
 
 ## What had to be settled first, and how each was
 
-**Nothing is outstanding: the template above is ready to send.** The heading no
+**Nothing is outstanding: the template above has been sent.** The heading no
 longer counts them, because the count in it would have been wrong twice by now.
 Each entry is kept struck rather than deleted, because what a question was before
 it was answered is the part a later reader needs.
@@ -337,9 +337,9 @@ commitment to rebake anything at every future version. The registration is
 of the type and not of a version, and the type string appears in no
 container, so 1.1 needed no new registration, only this update to the
 existing one under RFC 6838 §5.5, sent by the change controller now that 1.1
-is final and tagged, so that it cites a text that will not move. Ready to
-send as of 2026-09-22; until it is, the registry text describes 1.0 and is
-not wrong.
+is final and tagged, so that it cites a text that will not move. Sent
+2026-09-22 and awaiting IANA's reply; until it is applied, the registry text
+describes 1.0 and is not wrong.
 
 Not worth doing yet, and recorded here so the question is not asked twice.
 Contributing the type to freedesktop's `shared-mime-info` would let a Linux
