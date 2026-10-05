@@ -44,23 +44,25 @@ the case is a bug. See `conformance/README.md`.
 
 While a version is a draft, changes to it land without moving the number.
 Once a version is declared final, any change to what counts as a conformant
-container moves `slipcase_version`, and editorial changes — corrections,
-clarifications, added examples — do not. §2.4 is the rule; it governs this
-repository as much as it governs a reader. 1.0 is final as of 2026-08-29, and
+container moves `slipcase_version`, and two kinds of change do not: editorial
+changes — corrections, clarifications, added examples — and changes to what §3
+requires of an implementation that leave every container's conformance where
+it was. The second kind alters the rules and is not described as editorial.
+§2.4 is the rule; it governs this repository as much as it governs a reader. 1.0 is final as of 2026-08-29, and
 1.1 as of 2026-09-22.
 
 A tag marks each revision of the specification: `v1.0` is the text as
 declared final on 2026-08-29, and `v1.1` the text as declared final on
 2026-09-22. Both exist because the media type registration cites an address
 that has to outlive several years of commits, and a `blob/main` link follows
-the branch. So a tag names a revision rather than a version: an editorial
-change stays under its version's number under §2.4 and gets a tag of its own
-rather than moving this one, and a change that moves `slipcase_version` gets
-both. Editorial revisions are tagged `v1.0.1`, `v1.1.1`, and so on: the third
-number counts revisions of the text and is not part of `slipcase_version`.
+the branch. So a tag names a revision rather than a version: a change that
+leaves `slipcase_version` alone gets a tag of its own rather than moving this
+one, and a change that moves `slipcase_version` gets both. Such revisions are
+tagged `v1.0.1`, `v1.1.1`, and so on: the third number counts revisions of the
+text and is not part of `slipcase_version`.
 
 `conformance/` is what makes the distinction checkable rather than arguable. A
-change that alters no case's verdict is editorial; one that alters any case's
-verdict is not. Generate the corpus before and after and compare, which is what
-`DESIGN.md` records as the reason the cost of going final is smaller than it
-looks.
+change that alters no case's verdict leaves `slipcase_version` alone; one that
+alters any case's verdict moves it. Generate the corpus before and after and
+compare, which is what `DESIGN.md` records as the reason the cost of going final
+is smaller than it looks.

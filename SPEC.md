@@ -108,9 +108,12 @@ An implementation:
 - MUST locate the content file by `content.file` alone — never by position, and never by the naming convention in Appendix B;
 - MUST preserve keys in the flyleaf that it does not recognize, and MUST NOT reject a container because of them;
 - MUST preserve members that it does not recognize when rewriting a container;
-- MUST write only the content file, and the flyleaf if it needs it, when extracting — other members MUST NOT be written to disk;
-- MUST NOT replace an existing file when writing the content file, unless the caller has explicitly asked for replacement;
-- MUST create the content file with the permissions a newly created file would ordinarily receive, and MUST NOT apply permission bits recorded in the archive;
+- MUST write only the content file, and the flyleaf if it needs it, when extracting, unless the caller has explicitly asked for other members, by name or all together;
+- MUST write another member only if it is a regular file entry whose name, split at `/`, yields segments that are each non-empty, not `.` or `..`, and free of `\` (U+005C), `:` (U+003A), and the characters U+0000 to U+001F and U+007F;
+- MUST check every member the caller asked for before writing any of them, and MUST refuse the request, rather than sanitizing a name, if any of them fails the rule above or two of them share a name;
+- MUST NOT follow a symbolic link, or any other entry that redirects to another location, when creating or passing through a directory beneath the one the caller chose, and MUST NOT write outside the directory the caller chose;
+- MUST NOT replace an existing file when writing a member, unless the caller has explicitly asked for replacement;
+- MUST create each file and directory it writes with the permissions a newly created one would ordinarily receive, and MUST NOT apply permission bits recorded in the archive;
 - MUST reject a container whose `content.file` violates §2.3, rather than sanitizing it;
 - MUST render the Unicode bidirectional formatting characters (U+061C, U+200E–U+200F, U+202A–U+202E, U+2066–U+2069) in an escaped form when it displays `content.file` or a member name, rather than applying them;
 - MUST NOT report a container whose `slipcase_version` it does not recognize as conformant to a version it does recognize;
@@ -145,6 +148,8 @@ The bounds themselves are a matter for the implementation. A number fixed here w
 **Nesting is not bounded.** §2.3 permits a container as its own content file and assigns the arrangement no meaning, and nothing in this specification limits how deep it may go. Anything that follows a content file into another container needs a depth limit of its own. A reader that does not recurse has nothing to do here.
 
 **A member name is attacker-controlled text.** §2.3 constrains `content.file` enough that it cannot express a path, and no further: every remaining name is one a writer was entitled to pack. It is still a string a person reads in order to decide whether to open something, which is what the display rule in §3 is for, and it is still a string that will become a filename on some filesystem whose rules this specification does not know. An implementation that cannot write the name it was given has a problem to report rather than a name to change.
+
+**Every other member name can express a path.** §2.1 permits additional members whatever their names, and §3 permits writing them when a caller asks, so the rules on the write are all that stand between a name like `../../.ssh/authorized_keys` and the file it names. The segment rule in §3 settles what a name can say, and refusing the request outright means a container cannot get part of it written by arranging for the rest to fail. A name cannot see the destination, though: a directory already there may be a link to somewhere else, and on some platforms a name is altered on its way to the filesystem in ways the segment rule does not anticipate. That is why §3 also forbids following a link and writing outside the chosen directory, which hold whatever the filesystem does to the name.
 
 ## Appendix A. Example (non-normative)
 

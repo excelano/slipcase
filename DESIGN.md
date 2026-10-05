@@ -167,7 +167,7 @@ spent years watching tools disagree about.
 **Why extra members are allowed.** Both defined members are found by name, so
 nothing about locating them depends on what else is present. A rule against extra
 members would make every archive produced by macOS Finder invalid while buying
-nothing, and nothing extracts them in any case.
+nothing, and nothing extracts them unless a caller asks.
 
 **Why the specification lists what it does not constrain.** An implementer reading
 about a ZIP-based format will reasonably wonder whether member order, compression
@@ -246,9 +246,9 @@ draft: a change to what counts as a conformant container now moves
 `slipcase_version` instead of landing quietly. That is a smaller cost here than
 it looks, because §2.4 already says the number promises nothing to a program, so
 moving it breaks no contract — it announces. The corpus is what makes the
-distinction checkable: a change that alters no case's verdict is editorial, and
-one that alters any case's verdict is not, which is a test rather than a
-judgement.
+distinction checkable: a change that alters no case's verdict leaves the number
+alone, and one that alters any case's verdict moves it, which is a test rather
+than a judgement.
 
 **Why 1.1 exists.** Both renames change what counts as a conformant container,
 so SPEC §2.4 moves the number: a container conformant to 1.0 carries neither name,
@@ -377,9 +377,34 @@ the entire forward-compatibility story, and it is what makes a third-party tool
 that rewrites a container safe to use, since a tool that drops what it does not
 recognize destroys data silently.
 
-**Extraction.** Other members have no defined meaning, so writing them to disk
-hands a caller files the format never described. Anyone wanting a full unpack has
-a zip tool for that.
+**Extraction.** Other members have no defined meaning, so by default an
+implementation writes only what the format describes, and a caller extracting a
+container gets the content file and not whatever a writer packed beside it. A
+caller can ask for more. A profile layered on the format may keep a record's
+parts as other members, and forbidding the write would send anyone who wants
+them to a general ZIP tool, which applies none of the rules below.
+
+**Names that can be paths.** `content.file` cannot express a path because SPEC
+§2.3 says so, and every other member name can express anything. The rule for
+writing one applies §2.3's exclusions to each `/`-separated segment instead of
+banning `/`, because a member in a subdirectory is the ordinary case for a
+profile and the separator is not the danger: `..`, an empty segment that roots
+the name, a backslash some platforms read as a separator, and a colon some read
+as a drive are. Every member asked for is checked before any is written, because
+a request that fails halfway has already left files on disk that nobody decided
+to keep, and a container can arrange where it fails. Duplicate names among them
+are refused for the reason SPEC §2.1 gives for the defined members: there is no
+good answer to which one wins.
+
+**Links in the destination.** The segment rule constrains the name and nothing
+else. A destination that already holds a link named for a member's first segment
+carries the write wherever the link points, which is a property of the directory
+rather than of the container, so no rule on names can exclude it. Names ending in
+a space or a dot are in the same position on Windows, which trims them on the
+way to the filesystem, and §3.1 above declines to list one platform's rules. The
+requirement is therefore on where the write lands, not only on what the name
+says: no link is followed and nothing is written outside the chosen directory,
+whatever the filesystem makes of the name.
 
 **Rejecting rather than sanitizing.** Sanitizing a bad `content.file` produces a
 file at a path that no longer matches it, which breaks the format's own lookup.
@@ -457,7 +482,7 @@ check. What it gives up is the part that was never enforceable.
 This section once ended by saying that nothing else in SPEC §3 was a security
 requirement, and that decompression bombs and resource limits belonged to whatever
 ZIP parser an implementation used, since they applied equally to every ZIP
-consumer. Four of the rules above are now security requirements. The
+consumer. Several of the rules above are now security requirements. The
 resource-limit claim was wrong in its premise rather than in its conclusion: a ZIP
 consumer chooses what to inflate and a reader of this format does not, because
 inflating the flyleaf is how it finds out whether it is holding a
