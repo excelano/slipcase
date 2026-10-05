@@ -390,11 +390,27 @@ writing one applies §2.3's exclusions to each `/`-separated segment instead of
 banning `/`, because a member in a subdirectory is the ordinary case for a
 profile and the separator is not the danger: `..`, an empty segment that roots
 the name, a backslash some platforms read as a separator, and a colon some read
-as a drive are. Every member asked for is checked before any is written, because
-a request that fails halfway has already left files on disk that nobody decided
-to keep, and a container can arrange where it fails. Duplicate names among them
-are refused for the reason SPEC §2.1 gives for the defined members: there is no
-good answer to which one wins.
+as a drive are. A name flagged UTF-8 whose bytes are not UTF-8 has no decoding
+under SPEC §2.1, so there is nothing to apply the rule to, and it is refused
+rather than guessed at.
+
+**Directory entries.** `zip -r` and Finder both record one for every directory
+they pass, so a rule that refused them would refuse most real archives with any
+depth. They are passed over rather than written, because a member's name
+already says which directories it needs and creating those is part of writing
+it. What is lost is an empty directory, which the format gives no meaning to.
+
+**Checking first, and cleaning up anyway.** Everything a request will write is
+checked before any of it is written, the content file and flyleaf included,
+because a request that fails halfway has already left files on disk that nobody
+decided to keep, and a container can arrange where it fails. Duplicate names are
+refused for the reason SPEC §2.1 gives for the defined members, that there is no
+good answer to which one wins, and a member named as a directory another passes
+through is the same collision in a form the filesystem rather than the archive
+reports. The check covers what a name can predict and no more. Two names
+differing only in case are distinct under SPEC §2.1 and one file on many
+filesystems, and a member can be encrypted or fail to inflate. Removing what the
+request created is what covers those.
 
 **Links in the destination.** The segment rule constrains the name and nothing
 else. A destination that already holds a link named for a member's first segment
