@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Author: David M. Anderson
+# Built with AI assistance (Claude, Anthropic)
 """Generate the Slipcase conformance corpus described by manifest.toml.
 
 Every container is built here rather than committed as a blob, so the corpus is
