@@ -1,9 +1,5 @@
 # Slipcase — Design Document
 
-**Status:** design draft.
-**Document version:** draft, 2026-09-14
-**Specification version:** 1.1
-
 `SPEC.md` states the rules. This document says why each one is drawn where it is,
 and what was considered and rejected. Nothing here is normative: where the two
 disagree, the specification wins and this document is wrong.
@@ -83,9 +79,8 @@ a rule about traversal should not acquire a table of one operating system's
 reserved words. An implementation that cannot write the name it was given has a
 problem to report, not a name to change.
 
-**Why the content file must be a regular file entry.** An earlier draft named symbolic
-links alone, which left directories, device nodes, and FIFOs unaddressed for no
-better reason than that links were the case worth worrying about. Naming the one
+**Why the content file must be a regular file entry.** Forbidding symbolic links
+alone would leave directories, device nodes, and FIFOs unaddressed. Naming the one
 kind that is permitted is shorter and closes the rest.
 
 **Why names are decoded before they are compared.** ZIP has no single name
@@ -122,7 +117,7 @@ Declining to do it costs interoperability and buys what allowing no duplicate
 bought: a file with one reading. Adjusting offsets makes a file holding two
 archives readable as either, depending on where a reader starts, and it lets one file be a
 container and an executable at once, each reader finding the thing it came for.
-That is content-type confusion, and it is the attack a format invites when its whole
+That is content-type confusion, and it is the attack a format invites when its
 purpose is to hand a content file to whatever the operating system has registered for
 it. Duplicate names were refused rather than resolved because which one wins has
 no good answer. Which archive wins has no better one.
@@ -133,9 +128,8 @@ it touches. Neither is a thing this format asks for: a container is a file with 
 extension of its own, not a document smuggled inside another.
 
 **Why the record must also end the file, and count its members once.** The rule
-above was written against the two shapes anybody had thought of, and a review on
-2026-08-27 found three more, all in the same record and all measured against the
-reference implementation. Its end of central directory record carries two entry
+above covers the two obvious shapes, and three more live in the same record, each
+demonstrated against the reference implementation. Its end of central directory record carries two entry
 counts — records on this disk, records in total — which every writer sets equal
 and which that implementation and its ZIP dependency read from *different* fields;
 declaring three and two hid a duplicate content file behind a conformant verdict. Its
@@ -150,7 +144,7 @@ conforming readers holding the same file and naming different content files — 
 what §2.1 already refused for duplicate member names and for two archives in one
 file, arriving a third time through a smaller door. So the record is required to
 be internally consistent rather than merely present, and a reader is spared
-having to match another reader's field-by-field behaviour to stay in agreement
+having to match another reader's field-by-field behavior to stay in agreement
 with it.
 
 **Why comparison is exact.** Case-sensitive and without normalization, because
@@ -201,7 +195,7 @@ being countable and for carrying no second meaning. "Payload" carries one: in th
 literature SPEC §6 is written against, it is the word for the part of an attack
 that does the damage, and a specification whose security section treats every
 container as attacker-controlled cannot use the same word for the file it exists
-to deliver without one sense colouring the other. "Document" was rejected because
+to deliver without one sense coloring the other. "Document" was rejected because
 the format is type-neutral by §1, and "subject" because it is a Dublin Core key
 and the one a user is likeliest to add to a flyleaf. The term is two words so
 that the bare word "content" goes on meaning what it ordinarily means, and so
@@ -230,25 +224,25 @@ rather than at any edit to this document, so the number moves only when
 something about containers does. Fixing a typo cannot invalidate a container
 written yesterday.
 
-**Why 1.0 is final, and what that costs.** Marked final on 2026-08-29, when the
-format acquired the three things that make a version worth freezing: a
-conformance corpus of 88 cases that two implementations agree on, a published
-library and a released application that read containers people other than their
-authors will write, and a media type registration asking IANA to record a
-permanent name. The last is what forced the question rather than merely raising
-it — a registration citing a specification that describes itself as unfinished
-invites the reviewer's first question, and the answer would have to be that the
-format is in fact settled, which is a thing to write in the document rather than
-in a reply.
+**What declaring a version final costs.** A version is declared final once the
+format has the three things that make it worth freezing: a conformance corpus
+that independent implementations agree on, a published library and a released
+application that read containers people other than their authors write, and a
+media type registration that cites a permanent text. The registration is what
+forces the question rather than merely raising it. A registration citing a
+specification that describes itself as unfinished invites the reviewer's first
+question, and the answer would have to be that the format is in fact settled,
+which belongs in the document rather than in a reply.
 
-What it costs is the freedom `CONTRIBUTING.md` granted while the document was a
-draft: a change to what counts as a conformant container now moves
-`slipcase_version` instead of landing quietly. That is a smaller cost here than
-it looks, because §2.4 already says the number promises nothing to a program, so
-moving it breaks no contract — it announces. The corpus is what makes the
+What it costs is the freedom `CONTRIBUTING.md` grants while a version is a
+draft: a change to what counts as a conformant container moves
+`slipcase_version` instead of landing quietly. That is a smaller cost than it
+looks, because §2.4 already says the number promises nothing to a program, so
+moving it breaks no contract; it announces. The corpus is what makes the
 distinction checkable: a change that alters no case's verdict leaves the number
 alone, and one that alters any case's verdict moves it, which is a test rather
-than a judgement.
+than a judgment. §2.4 draws no line between one version's finality and
+another's.
 
 **Why 1.1 exists.** Both renames change what counts as a conformant container,
 so SPEC §2.4 moves the number: a container conformant to 1.0 carries neither name,
@@ -269,12 +263,6 @@ rather than promising there will not be another, because §2.4 already declines
 to promise a program anything, and an appendix that did would be the one place
 the document broke its own rule.
 
-**Why 1.1 is final, and what that costs.** Marked final on 2026-09-22, when the
-same three things stood again: the corpus at 90 cases, `slpc-rust` published at
-0.4.0, and `slipcase-desktop` and `slipcase-open` both released carrying 1.1.
-What finality costs is stated in the entry above; §2.4 draws no line between one
-version's and another's.
-
 **Why conformance is relative to a version.** This specification can say whether a
 container declaring `1.0` conforms to it. It cannot say anything about one
 declaring `2.0`, because it does not know what `2.0` requires, and the same holds
@@ -288,7 +276,7 @@ relaxes a rule, tightens one, or adds a required key. The one category that woul
 be safe — new optional keys and members — needs no version change at all, since
 SPEC §3 already requires unknown ones to be preserved.
 
-**Why any additional key is permitted, permanently.** This is the format's whole
+**Why any additional key is permitted, permanently.** This is the format's
 forward-compatibility story and must never be revised. A container that carries
 keys nobody has defined yet is the mechanism by which the format grows without
 breaking.
@@ -334,12 +322,12 @@ that fell back to the container's own name would be guessing.
 
 **Why the vendor tree.** RFC 6838 §3.4 defines the unregistered `x.` tree for
 use inside a private or otherwise limited environment, and says a type meant for
-public distribution does not belong in it; a format going into application
-stores is publicly distributed. Of the registered trees, the standards tree is
+public distribution does not belong in it; Slipcase is publicly
+distributed. Of the registered trees, the standards tree is
 not available without a standards body, and the personal tree is for an
 individual rather than for a company's format. The vendor tree is what is left,
 and it costs nothing beyond expert review. `IANA-REGISTRATION.md` is the
-submission, field for field, and the entry was registered on 2026-09-16.
+registration, field for field, and its copy of record.
 
 **Why the `+zip` suffix.** RFC 6839 registers `+zip` as a structured syntax
 suffix, and it says of a container what §2 above says: a consumer that has never
@@ -373,7 +361,7 @@ convention is not a fallback, position is not a fallback, and no other member ma
 be treated as the content file.
 
 **Unknown keys and unknown members.** The preservation rule does two jobs. It is
-the entire forward-compatibility story, and it is what makes a third-party tool
+the forward-compatibility story, and it is what makes a third-party tool
 that rewrites a container safe to use, since a tool that drops what it does not
 recognize destroys data silently.
 
@@ -467,7 +455,7 @@ writer may hold a file that genuinely has one in its name, and adding them to
 the same section declines to do with Windows device names. So it is a display
 problem, and it is written as one.
 
-Isolating was the alternative, and it was rejected. Wrapping the
+Isolating is the alternative, and it falls short. Wrapping the
 displayed name in U+2066 and U+2069 confines the reordering to one field, and a
 name that reads as `report.pdf` inside its own field is still a name that reads as
 `report.pdf`; the field exists to tell somebody what they are about to open. An
@@ -476,7 +464,7 @@ of the string, so an implementation relying on containment has to emit the
 terminator itself and cannot trust the name to carry one.
 
 The rule names one interpreter and there are others, which is why §3 carries a
-sentence generalising it rather than a second requirement. Bidi can be stated as
+sentence generalizing it rather than a second requirement. Bidi can be stated as
 a requirement because the character set is enumerable and the obligation is
 identical wherever a name is shown. Markup cannot: the reserved set belongs to
 whatever the name is being rendered into, and a corpus that hands a reader a
@@ -485,25 +473,23 @@ the string afterwards. The instance that could be stated was stated, in §2.3 �
 which excludes the C0 controls a terminal acts on, and so closes the medium with
 the worst consequences at the format rather than leaving it to display.
 
-**The version rule.** This was once phrased as a prohibition on assuming a
-container could be read. That constrained what a program believes rather than what
-it does, and §5 gives the test it failed: a rule nothing can check is an opinion,
-not a rule. The broad reading was worse than unfalsifiable, because it could not
-be satisfied even in principle — declining to treat a `2.0` container as a `1.0`
-one requires knowing what `2.0` requires, which is the one thing an implementation
-written against `1.0` does not have. Naming a reportable outcome instead gives the
-rule the shape of the undetermined rule beside it, and gives a corpus something to
-check. What it gives up is the part that was never enforceable.
+**The version rule.** It names a reportable outcome rather than prohibiting a
+program from assuming a container can be read. A prohibition would constrain what
+a program believes rather than what it does, and §5 gives the test that fails: a
+rule nothing can check is an opinion, not a rule. The broad reading would be worse
+than unfalsifiable, because it could not be satisfied even in principle: declining
+to treat a `2.0` container as a `1.0` one requires knowing what `2.0` requires,
+which is the one thing an implementation written against `1.0` does not have.
+Naming a reportable outcome gives the rule the shape of the undetermined rule
+beside it, and gives a corpus something to check.
 
-This section once ended by saying that nothing else in SPEC §3 was a security
-requirement, and that decompression bombs and resource limits belonged to whatever
-ZIP parser an implementation used, since they applied equally to every ZIP
-consumer. Several of the rules above are now security requirements. The
-resource-limit claim was wrong in its premise rather than in its conclusion: a ZIP
+Several of the rules above are security requirements, and resource limits are
+among them. It is tempting to leave decompression bombs to whatever ZIP parser an
+implementation uses, since they apply equally to every ZIP consumer, but a ZIP
 consumer chooses what to inflate and a reader of this format does not, because
-inflating the flyleaf is how it finds out whether it is holding a
-container. SPEC §6 takes that up, and §6 below says why it is a rule rather than a
-library's business.
+inflating the flyleaf is how it finds out whether it is holding a container. SPEC
+§6 takes that up, and §6 below says why it is a rule rather than a library's
+business.
 
 ---
 
@@ -523,9 +509,9 @@ and make the flyleaf ambiguous about what it describes.
 **Encryption.** The format adds none of its own and forbids none. Either member may
 be encrypted by ZIP's own mechanisms or by encrypting the file before packing it,
 and a container whose flyleaf is unreadable to a passer-by is still a container:
-it is attaching metadata to a file for whoever holds the key. Worth knowing rather
-than legislating: ZIP encryption narrows which implementations can open a
-container, since Go's `archive/zip` supports none of it and Info-ZIP's `unzip` has
+it is attaching metadata to a file for whoever holds the key. ZIP encryption does
+narrow which implementations can open a container, which the format leaves to the
+writer to weigh, since Go's `archive/zip` supports none of it and Info-ZIP's `unzip` has
 not handled AES.
 
 **Fixity.** No checksum key, and no position on whether a content file has changed. That
@@ -554,10 +540,10 @@ the magic rule.
 
 ## 6. Why security considerations are a section — SPEC §6
 
-**Why a bound is a rule and not a library's business.** The claim this replaces
-held that resource limits belong to whatever library does the parsing, and apply
-equally to everyone using that format. True of the content file, which nobody inflates
-until somebody asks for it. Not true of the flyleaf: identifying a
+**Why a bound is a rule and not a library's business.** Resource limits could be
+left to whatever library does the parsing, since they apply equally to everyone
+using that format. That holds for the content file, which nobody inflates
+until somebody asks for it. It does not hold for the flyleaf: identifying a
 container *is* inflating and parsing that member, so a reader spends the memory
 before it knows whether the file was a container, and a reader invoked by a file
 manager spends it without anybody having asked for anything. Deflate returns a
@@ -568,7 +554,7 @@ is small enough to mail.
 generous for the two keys this format defines and mean for anybody using the
 flyleaf for what SPEC §2.2 permits, which is anything they like. A gigabyte is no
 bound at all on a phone. The limit has to come from the reader's own situation,
-and requiring one without naming it is the most a format can honestly do.
+and requiring one without naming it is the most a format can do.
 
 **Why undetermined and not non-conformant.** The bound belongs to the reader, so
 exceeding it is a fact about the reader and not about the container. A reader

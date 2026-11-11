@@ -1,10 +1,11 @@
 # Conformance corpus
 
-Test containers for Slipcase 1.1, described by `manifest.toml` and built by
-`generate.py`.
+Test containers for the version of Slipcase that `SPEC.md` defines, described by
+`manifest.toml` and built by `generate.py`. The manifest's `spec_version` names
+that version.
 
 ```
-python3 generate.py          # writes cases/ — 90 containers, then self-checks
+python3 generate.py          # writes cases/, then self-checks
 python3 generate.py --list   # case ids and expected verdicts
 ```
 

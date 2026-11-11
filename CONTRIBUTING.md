@@ -48,14 +48,14 @@ container moves `slipcase_version`, and two kinds of change do not: editorial
 changes — corrections, clarifications, added examples — and changes to what §3
 requires of an implementation that leave every container's conformance where
 it was. The second kind alters the rules and is not described as editorial.
-§2.4 is the rule; it governs this repository as much as it governs a reader. 1.0 is final as of 2026-08-29, and
-1.1 as of 2026-09-22.
+§2.4 is the rule; it governs this repository as much as it governs a reader.
+`SPEC.md` names its version and whether it is final.
 
-A tag marks each revision of the specification: `v1.0` is the text as
-declared final on 2026-08-29, and `v1.1` the text as declared final on
-2026-09-22. Both exist because the media type registration cites an address
-that has to outlive several years of commits, and a `blob/main` link follows
-the branch. So a tag names a revision rather than a version: a change that
+A tag marks each revision of the specification, starting with the text of each
+version as declared final (`v1.0` for 1.0). Tags exist because the media type
+registration cites an address that has to outlive several years of commits, and
+a `blob/main` link follows the branch. So a tag names a revision rather than a
+version: a change that
 leaves `slipcase_version` alone gets a tag of its own rather than moving this
 one, and a change that moves `slipcase_version` gets both. Such revisions are
 tagged `v1.0.1`, `v1.1.1`, and so on: the third number counts revisions of the
